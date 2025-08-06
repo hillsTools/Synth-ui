@@ -3723,34 +3723,31 @@ getgenv().loaded = true
             end)
         end
 
--- Create Onyx Dupe styled window
+-- Create window with Onyx Dupe styling
 local window = library:window({
     name = "Onyx", 
     suffix = "Dupe",
     gameInfo = "Onyx Dupe for Counter-Strike: Global Offensive",
-    color = Color3.fromRGB(15, 15, 15),  -- Dark background
-    accent = Color3.fromRGB(0, 150, 255)  -- Blue accent color
+    size = UDim2.new(0, 650, 0, 400),  -- Wider and shorter UI
+    color = Color3.fromRGB(15, 15, 15),
+    accent = Color3.fromRGB(0, 150, 255)
 })
 
--- Make UI draggable with Onyx style
-library:draggify(window.items.main, {
-    dragToggle = window.items.topbar,
-    dragElements = {window.items.topbar},
-    dragStyle = "Onyx"
-})
+-- Make UI draggable
+library:draggify(window.items.main)
 
 -- Mobile adaptation
 if game:GetService("UserInputService").TouchEnabled then
-    window.items.main.Size = UDim2.new(0, 450, 0, 600)
-    window.items.main.Position = UDim2.new(0.5, -225, 0.5, -300)
+    window.items.main.Size = UDim2.new(0, 450, 0, 500)  -- Adjusted for mobile
     
+    -- Make elements larger for touch
     local function modifyElements(instance)
         for _, child in pairs(instance:GetChildren()) do
             if child:IsA("TextButton") or child:IsA("TextLabel") then
                 child.TextSize = 18
             end
             if child:IsA("Frame") and child.Name == "slider" then
-                child.Size = UDim2.new(0, 350, 0, 30)
+                child.Size = UDim2.new(0, 300, 0, 30)
             end
             modifyElements(child)
         end
@@ -3759,143 +3756,49 @@ if game:GetService("UserInputService").TouchEnabled then
     modifyElements(window.items.main)
 end
 
--- Main UI Elements (Onyx style)
-window:seperator({
-    name = "General",
-    color = Color3.fromRGB(0, 150, 255)  -- Onyx blue accent
+-- Main UI Elements
+window:seperator({name = "Main Settings"})
+local mainTab = window:tab({name = "Main", tabs = {"Settings"}})
+local column = mainTab:column({})
+
+-- Player ESP Section
+local section = column:section({
+    name = "Player ESP",
+    default = true
 })
 
-local enemies, teammates, self_section = window:tab({
-    name = "Example", 
-    tabs = {"Enemies", "Teammates", "Self"},
-    color = Color3.fromRGB(30, 30, 30)  -- Dark tab background
-})
-
-for _,tab in {enemies, teammates, self_section} do 
-    local column = tab:column({})
-    local section = column:section({
-        name = "General", 
-        default = true, 
-        toggle = false,
-        color = Color3.fromRGB(20, 20, 20),
-        accent = Color3.fromRGB(0, 150, 255)
-    })
-    
-    section:label({
-        name = "This is a title!", 
-        info = "Hello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawd\nextra info here ig"
-    })
-    
-    local page = tab:sub_tab({order = -10000, size = 2})
-    
-    for i = 1, 2 do 
-        local column = page:column({})
-        local section = column:section({
-            name = "General", 
-            default = true,
-            color = Color3.fromRGB(20, 20, 20),
-            accent = Color3.fromRGB(0, 150, 255)
-        })
-        
-        section:toggle({
-            name = "Enable ESP", 
-            seperator = true, 
-            style = "Onyx",
-            callback = function(bool) print(bool) end
-        })
-        
-        section:toggle({
-            name = "Through walls", 
-            seperator = true,
-            style = "Onyx"
-        })
-        
-        local toggle = section:toggle({
-            name = "Shared ESP", 
-            seperator = true,
-            style = "Onyx"
-        }):colorpicker({style = "Onyx"})
-
-        -- Sub Section Example
-        local toggle = section:toggle({
-            name = "Name", 
-            seperator = true,
-            style = "Onyx"
-        })
-        toggle:colorpicker({style = "Onyx"})
-        
-        local sub_section = toggle:settings({
-            color = Color3.fromRGB(15, 15, 15),
-            accent = Color3.fromRGB(0, 150, 255)
-        })
-        
-        sub_section:toggle({
-            name = "Show Display Names", 
-            seperator = true,
-            style = "Onyx"
-        })
-        
-        sub_section:dropdown({
-            name = "Font Name", 
-            items = {"ProggyTiny", "MonoSpace", "Tahoma"}, 
-            default = "MonoSpace", 
-            seperator = true,
-            style = "Onyx"
-        })
-        
-        sub_section:colorpicker({
-            name = "Another Colorpicker why not", 
-            seperator = true,
-            style = "Onyx"
-        })
-        
-        sub_section:keybind({
-            name = "Keybind", 
-            callback = function(bool) print(bool) end, 
-            info = "Hello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawd\nextra info here ig",
-            style = "Onyx"
-        })
-        -- 
-
-        section:toggle({
-            name = "Weapon", 
-            seperator = true, 
-            info = "Hello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawd\nextra info here ig",
-            style = "Onyx"
-        }):colorpicker({style = "Onyx"})
-        
-        section:dropdown({
-            name = "Flags", 
-            items = {"Scoped", "Flashed", "Knocked", "Touched"}, 
-            default = {"Scoped", "Flashed", "Knocked"}, 
-            multi = true, 
-            seperator = true,
-            style = "Onyx"
-        })
-        
-        section:toggle({
-            name = "Other Shit", 
-            seperator = false,
-            style = "Onyx"
-        }):colorpicker({style = "Onyx"})
+-- Toggle Button
+section:toggle({
+    name = "Enable ESP",
+    flag = "esp_enabled",
+    default = true,
+    callback = function(state)
+        print("ESP enabled:", state)
     end
-end
-
--- Initialize config system with Onyx style
-library:init_config(window, {
-    configFolder = "OnyxDupeConfigs",
-    style = "Onyx"
 })
 
--- Mobile touch controls
-if game:GetService("UserInputService").TouchEnabled then
-    for _, element in pairs(window.items.main:GetDescendants()) do
-        if element.Name == "slider" then
-            library:addTouchControls(element, {
-                touchArea = UDim2.new(0, 400, 0, 50)
-            })
-        end
+-- Slider with mobile support
+section:slider({
+    name = "ESP Distance",
+    min = 0,
+    max = 500,
+    default = 100,
+    flag = "esp_distance",
+    mobileFriendly = true,  -- Enables touch dragging
+    callback = function(value)
+        print("Distance set to:", value)
     end
-end
+})
+
+-- Button
+section:button({
+    name = "Refresh Players",
+    callback = function()
+        print("Refreshing player list...")
+    end
+})
+
+-- Initialize config system
+library:init_config(window)
 
 print("Onyx Dupe UI loaded successfully!")
