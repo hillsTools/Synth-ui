@@ -1,7 +1,3 @@
-GIVE ME THE FULL THING BAKC AND UPDATED I WANT EVERYTHING THE SAME AND I MEAN THE SAME JUST ADD THE UPDATE 
-
-add sliders and make everything work for mobile also add drag to the Ui for pc and mobile and make this work I want everything to work for  MOBILE ALSO ADD SOME BUTTONS And text boxes and fix he color picker for mobile 
-
 if getgenv().loaded then 
     getgenv().library:unload_menu() 
 end 
