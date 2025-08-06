@@ -3723,91 +3723,180 @@ getgenv().loaded = true
             end)
         end
 
--- Create window with mobile support
+-- Create window with Onyx Dupe styling
 local window = library:window({
-    name = "Nebula", 
-    suffix = "Tech",
-    gameInfo = "Milenium for Counter-Strike: Global Offensive",
-    size = UDim2.new(0, 500, 0, 400)  -- Explicit size helps with mobile
+    name = "Onyx", 
+    suffix = "Dupe",
+    gameInfo = "Onyx Dupe for Counter-Strike: Global Offensive",
+    size = UDim2.new(0, 600, 0, 500),  -- Wider UI
+    color = Color3.fromRGB(15, 15, 15),  -- Dark background
+    accent = Color3.fromRGB(0, 150, 255)  -- Blue accent color
 })
 
--- Mobile adaptation
+-- Mobile adaptation with touch controls
 if game:GetService("UserInputService").TouchEnabled then
-    window.items.main.Size = UDim2.new(0, 350, 0, 500)  -- Smaller for mobile
+    window.items.main.Size = UDim2.new(0, 400, 0, 600)  -- Adjusted for mobile
+    window.items.main.Position = UDim2.new(0.5, -200, 0.5, -300)  -- Centered
+    
     -- Make elements larger for touch
-    for _,v in pairs(window.items) do
-        if v:IsA("TextButton") then
-            v.Size = UDim2.new(v.Size.X.Scale, v.Size.X.Offset, 0, 40)
+    for _,v in pairs(window.items:GetDescendants()) do
+        if v:IsA("TextButton") or v:IsA("TextLabel") then
+            v.TextSize = 18  -- Larger text
+        end
+        if v:IsA("Frame") and v.Name == "slider" then
+            v.Size = UDim2.new(0, 300, 0, 30)  -- Larger sliders
         end
     end
 end
 
--- Make UI draggable on all platforms
-library:draggify(window.items.main)
-
--- Main UI Elements
-window:seperator({name = "Main Settings"})
-local mainTab = window:tab({name = "Main", tabs = {"Settings"}})
-local column = mainTab:column({})
-
--- Player ESP Section
-local section = column:section({
-    name = "Player ESP",
-    default = true
+-- Make UI draggable on all platforms with Onyx style
+library:draggify(window.items.main, {
+    dragToggle = window.items.topbar,
+    dragElements = {window.items.topbar},
+    dragStyle = "Onyx"  -- Custom drag style
 })
 
--- Toggle Button
-section:toggle({
+-- Main UI Elements with Onyx styling
+window:seperator({name = "Main Settings", color = Color3.fromRGB(0, 150, 255)})
+local mainTab = window:tab({name = "Main", tabs = {"Settings", "Visuals", "Aimbot"}, color = Color3.fromRGB(30, 30, 30)})
+local column = mainTab:column({size = 1.5})  -- Wider column
+
+-- Player ESP Section with Onyx style
+local espSection = column:section({
+    name = "Player ESP",
+    default = true,
+    color = Color3.fromRGB(20, 20, 20),
+    accent = Color3.fromRGB(0, 150, 255)
+})
+
+-- Toggle Button with Onyx style
+espSection:toggle({
     name = "Enable ESP",
     flag = "esp_enabled",
     default = true,
+    style = "Onyx",
     callback = function(state)
         print("ESP enabled:", state)
     end
 })
 
--- Slider
-section:slider({
+-- Slider with touch support
+espSection:slider({
     name = "ESP Distance",
     min = 0,
-    max = 500,
-    default = 100,
+    max = 1000,  -- Increased max distance
+    default = 250,
     flag = "esp_distance",
+    style = "Onyx",
+    mobileFriendly = true,  -- Enables touch dragging
     callback = function(value)
         print("Distance set to:", value)
     end
 })
 
--- Dropdown
-section:dropdown({
+-- Dropdown with Onyx style
+espSection:dropdown({
     name = "ESP Style",
-    items = {"Box", "Skeleton", "Corners", "Name Only"},
-    default = "Box",
+    items = {"Box", "Skeleton", "Corners", "Name Only", "Onyx Style"},
+    default = "Onyx Style",
     flag = "esp_style",
+    style = "Onyx",
     callback = function(option)
         print("Style selected:", option)
     end
 })
 
--- Text Box
-section:textbox({
+-- Text Box with Onyx style
+espSection:textbox({
     name = "Player Filter",
     placeholder = "Enter player name...",
     flag = "player_filter",
+    style = "Onyx",
     callback = function(text)
         print("Filter text:", text)
     end
 })
 
--- Button
-section:button({
+-- Button with Onyx style
+espSection:button({
     name = "Refresh Players",
+    style = "Onyx",
     callback = function()
         print("Refreshing player list...")
     end
 })
 
--- Initialize config system
-library:init_config(window)
+-- Aimbot Section
+local aimbotSection = column:section({
+    name = "Aimbot",
+    default = false,
+    color = Color3.fromRGB(20, 20, 20),
+    accent = Color3.fromRGB(0, 150, 255)
+})
 
-print("UI loaded successfully!")
+aimbotSection:toggle({
+    name = "Enable Aimbot",
+    flag = "aim_enabled",
+    default = false,
+    style = "Onyx"
+})
+
+aimbotSection:slider({
+    name = "Aimbot FOV",
+    min = 1,
+    max = 360,
+    default = 30,
+    flag = "aim_fov",
+    style = "Onyx",
+    mobileFriendly = true
+})
+
+-- Visuals Section
+local visualsTab = mainTab:switch("Visuals")
+local visualsColumn = visualsTab:column({size = 1.5})
+
+local worldSection = visualsColumn:section({
+    name = "World Visuals",
+    default = true,
+    color = Color3.fromRGB(20, 20, 20),
+    accent = Color3.fromRGB(0, 150, 255)
+})
+
+worldSection:toggle({
+    name = "World Color Modulation",
+    flag = "world_color",
+    style = "Onyx"
+})
+
+worldSection:colorpicker({
+    name = "Ambient Color",
+    default = Color3.fromRGB(255, 255, 255),
+    flag = "ambient_color",
+    style = "Onyx"
+})
+
+-- Initialize config system with Onyx style
+library:init_config(window, {
+    configFolder = "OnyxDupeConfigs",
+    style = "Onyx"
+})
+
+-- Mobile touch controls setup
+if game:GetService("UserInputService").TouchEnabled then
+    -- Add touch controls for sliders
+    for _,slider in pairs(window.items:GetDescendants()) do
+        if slider.Name == "slider" then
+            library:addTouchControls(slider)
+        end
+    end
+    
+    -- Make buttons more touch-friendly
+    for _,button in pairs(window.items:GetDescendants()) do
+        if button:IsA("TextButton") and button.Name ~= "topbar" then
+            button.Size = UDim2.new(0, 150, 0, 40)
+            button.TextSize = 16
+        end
+    end
+end
+
+print("Onyx Dupe UI loaded successfully!")
