@@ -3722,3 +3722,92 @@ getgenv().loaded = true
                 items[ "notification" ]:Destroy() 
             end)
         end
+
+-- Create window with mobile support
+local window = library:window({
+    name = "Nebula", 
+    suffix = "Tech",
+    gameInfo = "Milenium for Counter-Strike: Global Offensive",
+    size = UDim2.new(0, 500, 0, 400)  -- Explicit size helps with mobile
+})
+
+-- Mobile adaptation
+if game:GetService("UserInputService").TouchEnabled then
+    window.items.main.Size = UDim2.new(0, 350, 0, 500)  -- Smaller for mobile
+    -- Make elements larger for touch
+    for _,v in pairs(window.items) do
+        if v:IsA("TextButton") then
+            v.Size = UDim2.new(v.Size.X.Scale, v.Size.X.Offset, 0, 40)
+        end
+    end
+end
+
+-- Make UI draggable on all platforms
+library:draggify(window.items.main)
+
+-- Main UI Elements
+window:seperator({name = "Main Settings"})
+local mainTab = window:tab({name = "Main", tabs = {"Settings"}})
+local column = mainTab:column({})
+
+-- Player ESP Section
+local section = column:section({
+    name = "Player ESP",
+    default = true
+})
+
+-- Toggle Button
+section:toggle({
+    name = "Enable ESP",
+    flag = "esp_enabled",
+    default = true,
+    callback = function(state)
+        print("ESP enabled:", state)
+    end
+})
+
+-- Slider
+section:slider({
+    name = "ESP Distance",
+    min = 0,
+    max = 500,
+    default = 100,
+    flag = "esp_distance",
+    callback = function(value)
+        print("Distance set to:", value)
+    end
+})
+
+-- Dropdown
+section:dropdown({
+    name = "ESP Style",
+    items = {"Box", "Skeleton", "Corners", "Name Only"},
+    default = "Box",
+    flag = "esp_style",
+    callback = function(option)
+        print("Style selected:", option)
+    end
+})
+
+-- Text Box
+section:textbox({
+    name = "Player Filter",
+    placeholder = "Enter player name...",
+    flag = "player_filter",
+    callback = function(text)
+        print("Filter text:", text)
+    end
+})
+
+-- Button
+section:button({
+    name = "Refresh Players",
+    callback = function()
+        print("Refreshing player list...")
+    end
+})
+
+-- Initialize config system
+library:init_config(window)
+
+print("UI loaded successfully!")
