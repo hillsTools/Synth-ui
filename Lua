@@ -3723,48 +3723,26 @@ getgenv().loaded = true
             end)
         end
 
--- Create window with Onyx Dupe styling
+-- Create Onyx Dupe styled window
 local window = library:window({
     name = "Onyx", 
     suffix = "Dupe",
     gameInfo = "Onyx Dupe for Counter-Strike: Global Offensive",
-    size = UDim2.new(0, 600, 0, 500),  -- Wider UI
     color = Color3.fromRGB(15, 15, 15),  -- Dark background
     accent = Color3.fromRGB(0, 150, 255)  -- Blue accent color
 })
 
--- Mobile adaptation with touch controls
-if game:GetService("UserInputService").TouchEnabled then
-    window.items.main.Size = UDim2.new(0, 400, 0, 600)  -- Adjusted for mobile
-    window.items.main.Position = UDim2.new(0.5, -200, 0.5, -300)  -- Centered
-    
-    -- Make elements larger for touch
-    for _,v in pairs(window.items:GetDescendants()) do
-        if v:IsA("TextButton") or v:IsA("TextLabel") then
-            v.TextSize = 18  -- Larger text
-        end
-        if v:IsA("Frame") and v.Name == "slider" then
-            v.Size = UDim2.new(0, 300, 0, 30)  -- Larger sliders
-        end
-    end
-end
-
--- Create window with Onyx Dupe styling
-local window = library:window({
-    name = "Onyx", 
-    suffix = "Dupe",
-    gameInfo = "Onyx Dupe for Counter-Strike: Global Offensive",
-    size = UDim2.new(0, 700, 0, 450),  -- Wider and less tall
-    color = Color3.fromRGB(15, 15, 15),
-    accent = Color3.fromRGB(0, 150, 255)
+-- Make UI draggable with Onyx style
+library:draggify(window.items.main, {
+    dragToggle = window.items.topbar,
+    dragElements = {window.items.topbar},
+    dragStyle = "Onyx"
 })
 
--- Improved mobile adaptation
-local function adaptForMobile()
-    if not game:GetService("UserInputService").TouchEnabled then return end
-    
-    window.items.main.Size = UDim2.new(0, 450, 0, 500)  -- Adjusted mobile size
-    window.items.main.Position = UDim2.new(0.5, -225, 0.5, -250)  -- Centered
+-- Mobile adaptation
+if game:GetService("UserInputService").TouchEnabled then
+    window.items.main.Size = UDim2.new(0, 450, 0, 600)
+    window.items.main.Position = UDim2.new(0.5, -225, 0.5, -300)
     
     local function modifyElements(instance)
         for _, child in pairs(instance:GetChildren()) do
@@ -3774,9 +3752,6 @@ local function adaptForMobile()
             if child:IsA("Frame") and child.Name == "slider" then
                 child.Size = UDim2.new(0, 350, 0, 30)
             end
-            if child:IsA("TextButton") and child.Name ~= "topbar" then
-                child.Size = UDim2.new(0, 180, 0, 40)
-            end
             modifyElements(child)
         end
     end
@@ -3784,138 +3759,131 @@ local function adaptForMobile()
     modifyElements(window.items.main)
 end
 
-adaptForMobile()
-
--- Enhanced drag functionality
-library:draggify(window.items.main, {
-    dragToggle = window.items.topbar,
-    dragElements = {window.items.topbar, window.items.main},  -- Whole window is draggable
-    dragStyle = "Onyx",
-    mobileFriendly = true  -- Special mobile drag handling
+-- Main UI Elements (Onyx style)
+window:seperator({
+    name = "General",
+    color = Color3.fromRGB(0, 150, 255)  -- Onyx blue accent
 })
 
--- Main UI Elements with optimized layout
-window:seperator({name = "Main Settings", color = window.options.accent})
-local mainTab = window:tab({
-    name = "Main", 
-    tabs = {"Settings", "Visuals", "Aimbot"},
-    color = Color3.fromRGB(30, 30, 30)
+local enemies, teammates, self_section = window:tab({
+    name = "Example", 
+    tabs = {"Enemies", "Teammates", "Self"},
+    color = Color3.fromRGB(30, 30, 30)  -- Dark tab background
 })
 
--- Using two columns for better space utilization
-local leftColumn = mainTab:column({size = 1})
-local rightColumn = mainTab:column({size = 1})
+for _,tab in {enemies, teammates, self_section} do 
+    local column = tab:column({})
+    local section = column:section({
+        name = "General", 
+        default = true, 
+        toggle = false,
+        color = Color3.fromRGB(20, 20, 20),
+        accent = Color3.fromRGB(0, 150, 255)
+    })
+    
+    section:label({
+        name = "This is a title!", 
+        info = "Hello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawd\nextra info here ig"
+    })
+    
+    local page = tab:sub_tab({order = -10000, size = 2})
+    
+    for i = 1, 2 do 
+        local column = page:column({})
+        local section = column:section({
+            name = "General", 
+            default = true,
+            color = Color3.fromRGB(20, 20, 20),
+            accent = Color3.fromRGB(0, 150, 255)
+        })
+        
+        section:toggle({
+            name = "Enable ESP", 
+            seperator = true, 
+            style = "Onyx",
+            callback = function(bool) print(bool) end
+        })
+        
+        section:toggle({
+            name = "Through walls", 
+            seperator = true,
+            style = "Onyx"
+        })
+        
+        local toggle = section:toggle({
+            name = "Shared ESP", 
+            seperator = true,
+            style = "Onyx"
+        }):colorpicker({style = "Onyx"})
 
--- Player ESP Section (Left Column)
-local espSection = leftColumn:section({
-    name = "Player ESP",
-    default = true,
-    color = Color3.fromRGB(20, 20, 20),
-    accent = window.options.accent
-})
+        -- Sub Section Example
+        local toggle = section:toggle({
+            name = "Name", 
+            seperator = true,
+            style = "Onyx"
+        })
+        toggle:colorpicker({style = "Onyx"})
+        
+        local sub_section = toggle:settings({
+            color = Color3.fromRGB(15, 15, 15),
+            accent = Color3.fromRGB(0, 150, 255)
+        })
+        
+        sub_section:toggle({
+            name = "Show Display Names", 
+            seperator = true,
+            style = "Onyx"
+        })
+        
+        sub_section:dropdown({
+            name = "Font Name", 
+            items = {"ProggyTiny", "MonoSpace", "Tahoma"}, 
+            default = "MonoSpace", 
+            seperator = true,
+            style = "Onyx"
+        })
+        
+        sub_section:colorpicker({
+            name = "Another Colorpicker why not", 
+            seperator = true,
+            style = "Onyx"
+        })
+        
+        sub_section:keybind({
+            name = "Keybind", 
+            callback = function(bool) print(bool) end, 
+            info = "Hello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawd\nextra info here ig",
+            style = "Onyx"
+        })
+        -- 
 
-espSection:toggle({
-    name = "Enable ESP",
-    flag = "esp_enabled",
-    default = true,
-    style = "Onyx"
-})
+        section:toggle({
+            name = "Weapon", 
+            seperator = true, 
+            info = "Hello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawdHello there this is a paragraph.. adawdawdawd\nextra info here ig",
+            style = "Onyx"
+        }):colorpicker({style = "Onyx"})
+        
+        section:dropdown({
+            name = "Flags", 
+            items = {"Scoped", "Flashed", "Knocked", "Touched"}, 
+            default = {"Scoped", "Flashed", "Knocked"}, 
+            multi = true, 
+            seperator = true,
+            style = "Onyx"
+        })
+        
+        section:toggle({
+            name = "Other Shit", 
+            seperator = false,
+            style = "Onyx"
+        }):colorpicker({style = "Onyx"})
+    end
+end
 
-espSection:slider({
-    name = "ESP Distance",
-    min = 0,
-    max = 1000,
-    default = 250,
-    flag = "esp_distance",
-    style = "Onyx",
-    mobileFriendly = true
-})
-
-espSection:dropdown({
-    name = "ESP Style",
-    items = {"Box", "Skeleton", "Corners", "Name Only", "Onyx"},
-    default = "Onyx",
-    flag = "esp_style",
-    style = "Onyx"
-})
-
--- Aimbot Section (Right Column)
-local aimbotSection = rightColumn:section({
-    name = "Aimbot",
-    default = true,
-    color = Color3.fromRGB(20, 20, 20),
-    accent = window.options.accent
-})
-
-aimbotSection:toggle({
-    name = "Enable Aimbot",
-    flag = "aim_enabled",
-    default = false,
-    style = "Onyx"
-})
-
-aimbotSection:slider({
-    name = "Aimbot FOV",
-    min = 1,
-    max = 360,
-    default = 30,
-    flag = "aim_fov",
-    style = "Onyx",
-    mobileFriendly = true
-})
-
-aimbotSection:dropdown({
-    name = "Aimbot Bone",
-    items = {"Head", "Neck", "Chest", "Pelvis"},
-    default = "Head",
-    flag = "aim_bone",
-    style = "Onyx"
-})
-
--- Visuals Tab
-local visualsTab = mainTab:switch("Visuals")
-local visualsLeft = visualsTab:column({size = 1})
-local visualsRight = visualsTab:column({size = 1})
-
--- World Visuals
-local worldSection = visualsLeft:section({
-    name = "World Visuals",
-    default = true,
-    color = Color3.fromRGB(20, 20, 20),
-    accent = window.options.accent
-})
-
-worldSection:toggle({
-    name = "World Modulation",
-    flag = "world_mod",
-    style = "Onyx"
-})
-
-worldSection:colorpicker({
-    name = "Ambient Color",
-    default = Color3.fromRGB(255, 255, 255),
-    flag = "ambient_color",
-    style = "Onyx"
-})
-
--- Player Visuals
-local playerSection = visualsRight:section({
-    name = "Player Visuals",
-    default = true,
-    color = Color3.fromRGB(20, 20, 20),
-    accent = window.options.accent
-})
-
-playerSection:toggle({
-    name = "Chams",
-    flag = "player_chams",
-    style = "Onyx"
-})
-
-playerSection:colorpicker({
-    name = "Chams Color",
-    default = Color3.fromRGB(0, 150, 255),
-    flag = "chams_color",
+-- Initialize config system with Onyx style
+library:init_config(window, {
+    configFolder = "OnyxDupeConfigs",
     style = "Onyx"
 })
 
@@ -3924,23 +3892,10 @@ if game:GetService("UserInputService").TouchEnabled then
     for _, element in pairs(window.items.main:GetDescendants()) do
         if element.Name == "slider" then
             library:addTouchControls(element, {
-                touchArea = UDim2.new(0, 400, 0, 50)  -- Larger touch area
+                touchArea = UDim2.new(0, 400, 0, 50)
             })
-        end
-    end
-    
-    -- Add touch scroll to sections
-    for _, section in pairs(window.items.main:GetDescendants()) do
-        if section:FindFirstChild("section") then
-            library:addTouchScroll(section)
         end
     end
 end
 
--- Initialize config system
-library:init_config(window, {
-    configFolder = "OnyxDupeConfigs",
-    style = "Onyx"
-})
-
-print("Onyx Dupe UI successfully loaded!")
+print("Onyx Dupe UI loaded successfully!")
