@@ -14084,7 +14084,7 @@ if Game_Name == "The Bronx" then
                         _SafeItem.refresh_options(Items)
 
                         return Items
-                    end})
+                    end)
 
                     task.spawn(Refresh)
                     
@@ -14100,7 +14100,7 @@ if Game_Name == "The Bronx" then
 
                     Backpack_ChildAdded = LocalPlayer.Backpack.ChildAdded:Connect(Refresh)
                     Backpack_ChildRemoved = LocalPlayer.Backpack.ChildRemoved:Connect(Refresh)
-                end})
+                end)
 
                 Players.PlayerRemoving:Connect(LPH_NO_VIRTUALIZE(function(Player)
                     if Player == LocalPlayer then
@@ -14124,7 +14124,7 @@ if Game_Name == "The Bronx" then
                     _TakeItem.refresh_options(Items)
 
                     return Items
-                end})
+                end)
 
                 task.spawn(RefreshTakeItemList)
 
@@ -14311,7 +14311,7 @@ if Game_Name == "The Bronx" then
                     table.sort(Cache)
 
                     PlayerList.refresh_options(Cache)
-                end})
+                end)
 
                 task.spawn(RefreshPlayers)
 
