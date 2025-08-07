@@ -13974,7 +13974,7 @@ local window = library:window({
     name = "Box", 
     suffix = ".lol", 
     gameInfo = string.format("Box.lol : %s", Game_Name:lower()),
-    size = UDim2.new(0, 500, 0, 600) -- Width 500, Height 600 (adjust these values as needed)
+    size = UDim2.new(0, 800, 0, 1000) -- Width 500, Height 600 (adjust these values as needed)
 })
 
 if Game_Name == "The Bronx" then
