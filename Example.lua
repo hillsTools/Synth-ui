@@ -2954,7 +2954,7 @@ do
                 frame.Parent = getgenv().HideScreenGUI
             
                 local textLabel = Instance.new("TextLabel")
-                textLabel.Name = "\nhideuiboxlol"
+                textLabel.Name = "\nhideuibronxlol"
                 textLabel.Size = UDim2.new(0, 400, 0, 100)
                 textLabel.Font = Enum.Font.SourceSansBold
                 textLabel.RichText = true
@@ -5249,11 +5249,11 @@ do
                 frame.Parent = getgenv().HideScreenGUI
             
                 local textLabel = Instance.new("TextLabel")
-                textLabel.Name = "\nhideuiboxlol"
+                textLabel.Name = "\nhideuibronxlol"
                 textLabel.Size = UDim2.new(0, 400, 0, 100)
                 textLabel.Font = Enum.Font.SourceSansBold
                 textLabel.RichText = true
-                textLabel.Text = '<font color="rgb(0,163,224)">bronx.</font>lol\n' .. Title
+                textLabel.Text = '<font color="rgb(0,163,224)">box.</font>lol\n' .. Title
                 textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
                 textLabel.BackgroundTransparency = 1
                 textLabel.TextSize = 36
@@ -14851,6 +14851,7 @@ if Game_Name == "The Bronx" then
         end
     end
 end
+
 window:seperator({name = "Combat"}) do
     local SilentAimTab = window:tab({name = "Silent Aim", tabs = {"General Settings"}, icon = GetImage("Pistol.png")}) do
         local SilentAimColumn = SilentAimTab:column({})
@@ -15152,6 +15153,7 @@ window:seperator({name = "Combat"}) do
             end
         end
     end
+
 window:seperator({name = "World"}) do
     local VisualsTab = window:tab({name = "Visuals", tabs = {"Players"}, icon = GetImage("ESP.png")})
 
