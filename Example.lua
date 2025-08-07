@@ -14497,16 +14497,28 @@ if Game_Name == "The Bronx" then
 
                 local DupingSection = Column:section({name = "Duping Section", size = 0.29, default = false, side = 'right', icon = GetImage("Node.png")}) 
 
-                local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
-local Players = cloneref(game:GetService("Players"))
+                local player = game:GetService("Players").LocalPlayer
+local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
 local RunService = game:GetService("RunService")
-local Player = Players.LocalPlayer
 
 -- Configuration
 local blacklistedTools = {"Fist", "Phone"}
 local AutoDupe = false
 local Cooldown = false
-local FixedWaitTime = 3 -- 3 second wait for all operations
+local OperationWait = 1.5 -- Balanced wait time for main operations
+local QuickWait = 0.2 -- Fast but safe wait for rapid actions
+
+local function teleport(x, y, z)
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local hrp = character:WaitForChild("HumanoidRootPart")
+
+    humanoid:ChangeState(0)
+    if player:GetAttribute("LastACPos") ~= nil then
+        repeat task.wait() until not player:GetAttribute("LastACPos")
+    end
+    hrp.CFrame = CFrame.new(x, y, z)
+end
 
 local function isToolBlacklisted(toolName)
     for _, blacklisted in ipairs(blacklistedTools) do
@@ -14516,7 +14528,7 @@ local function isToolBlacklisted(toolName)
 end
 
 local function getSecondLastTool()
-    local backpack = Player.Backpack:GetChildren()
+    local backpack = player.Backpack:GetChildren()
     local tools = {}
     
     for _, item in ipairs(backpack) do
@@ -14531,8 +14543,7 @@ local function getSecondLastTool()
         return tools[1]
     end
     
-    -- Check character if backpack is empty
-    local charTool = Player.Character:FindFirstChildOfClass("Tool")
+    local charTool = player.Character:FindFirstChildOfClass("Tool")
     if charTool and not isToolBlacklisted(charTool.Name) then
         return charTool
     end
@@ -14540,64 +14551,95 @@ local function getSecondLastTool()
     return nil
 end
 
+local function getPing()
+    if typeof(player.GetNetworkPing) == "function" then
+        local success, result = pcall(function()
+            return tonumber(string.match(player:GetNetworkPing(), "%d+"))
+        end)
+        if success and result then return result end
+    end
+
+    local success2, pingStat = pcall(function()
+        return player:FindFirstChild("PlayerGui"):FindFirstChild("Ping") or
+               player:FindFirstChild("PlayerScripts"):FindFirstChild("Ping")
+    end)
+    if success2 and pingStat and pingStat:IsA("TextLabel") then
+        local num = tonumber(string.match(pingStat.Text, "%d+"))
+        if num then return num end
+    end
+
+    local t0 = tick()
+    local temp = Instance.new("BoolValue", ReplicatedStorage)
+    temp.Name = "PingTest_"..tostring(math.random(10000,99999))
+    task.wait(0.1)
+    local t1 = tick()
+    temp:Destroy()
+    return math.clamp((t1-t0)*1000,50,300)
+end
+
 local function dupeItem()
     if Cooldown then return false end
     Cooldown = true
     
-    local Tool = getSecondLastTool()
-    if not Tool then
+    local tool = getSecondLastTool()
+    if not tool or isToolBlacklisted(tool.Name) then
         library.notifications:create_notification({
             name = "Box.lol",
-            info = "No dupeable tool found!",
+            info = "No valid tool found to dupe!",
             lifetime = 5
         })
         Cooldown = false
         return false
     end
-
-    local ToolName = Tool.Name
-    local ToolId = nil
-
+        
     -- Prepare tool
-    if Tool.Parent == Player.Character then
-        Tool.Parent = Player.Backpack
-        task.wait(0.5)
-    end
+    tool.Parent = player.Backpack
+    task.wait(QuickWait)
 
-    local marketConnection = ReplicatedStorage.MarketItems.ChildAdded:Connect(function(item)
-        if item.Name == ToolName then
-            local owner = item:WaitForChild("owner", 3) -- 3 second timeout
-            if owner and owner.Value == Player.Name then
+    local ToolId = nil
+    local marketconnection = ReplicatedStorage.MarketItems.ChildAdded:Connect(function(item)
+        if item.Name == tool.Name then
+            local owner = item:WaitForChild("owner", 2)
+            if owner and owner.Value == player.Name then
                 ToolId = item:GetAttribute("SpecialId")
             end
         end
     end)
 
+    local ping = getPing()
+    local delay = 0.25 + ((math.clamp(ping,0,300)/300)*0.03
+
     -- Phase 1: List item
-    ReplicatedStorage.ListWeaponRemote:FireServer(ToolName, 99999)
-    task.wait(FixedWaitTime) -- Fixed 3 second wait
+    ReplicatedStorage.ListWeaponRemote:FireServer(tool.Name, 99999)
+    task.wait(delay)
 
-    -- Phase 2: Store item
-    ReplicatedStorage.BackpackRemote:InvokeServer("Store", ToolName)
-    task.wait(FixedWaitTime) -- Fixed 3 second wait
+    -- Phase 2: Double Store with waits
+    ReplicatedStorage.BackpackRemote:InvokeServer("Store", tool.Name)
+    task.wait(OperationWait)
+    ReplicatedStorage.BackpackRemote:InvokeServer("Store", tool.Name)
+    task.wait(OperationWait)
 
-    -- Phase 3: Remove from market
+    -- Phase 3: Double Remove with waits
     if ToolId then
-        ReplicatedStorage.BuyItemRemote:FireServer(ToolName, "Remove", ToolId)
-        task.wait(FixedWaitTime) -- Fixed 3 second wait
+        ReplicatedStorage.BuyItemRemote:FireServer(tool.Name, "Remove", ToolId)
+        task.wait(OperationWait)
+        ReplicatedStorage.BuyItemRemote:FireServer(tool.Name, "Remove", ToolId)
+        task.wait(OperationWait)
     end
 
-    -- Phase 4: Grab item twice
-    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
-    task.wait(FixedWaitTime) -- Fixed 3 second wait
-    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
+    -- Phase 4: Triple Grab with quick waits
+    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", tool.Name)
+    task.wait(QuickWait)
+    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", tool.Name)
+    task.wait(QuickWait)
+    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", tool.Name)
 
-    marketConnection:Disconnect()
+    marketconnection:Disconnect()
     Cooldown = false
     
     library.notifications:create_notification({
         name = "Box.lol",
-        info = "Successfully duped "..ToolName,
+        info = "Successfully duped "..tool.Name,
         lifetime = 5
     })
     
@@ -14628,7 +14670,7 @@ DupingSection:button({
 RunService.Heartbeat:Connect(function()
     if AutoDupe and not Cooldown then
         dupeItem()
-        task.wait(1) -- Small delay between auto dupes
+        task.wait(1) -- Cooldown between auto dupes
     end
 end)
                 DupingSection:label({wrapped = true, name = "This might bug if you have more than 1 of the item you're duping!"})
