@@ -14506,7 +14506,7 @@ local Player = Players.LocalPlayer
 local blacklistedTools = {"Fist", "Phone"}
 local AutoDupe = false
 local Cooldown = false
-local DupeDelay = 1.5 -- Base delay between dupes
+local FixedWaitTime = 3 -- 3 second wait for all operations
 
 local function isToolBlacklisted(toolName)
     for _, blacklisted in ipairs(blacklistedTools) do
@@ -14540,32 +14540,6 @@ local function getSecondLastTool()
     return nil
 end
 
-local function getPing()
-    if typeof(Player.GetNetworkPing) == "function" then
-        local success, result = pcall(function()
-            return tonumber(string.match(Player:GetNetworkPing(), "%d+"))
-        end)
-        if success and result then return result end
-    end
-
-    local success2, pingStat = pcall(function()
-        return Player:FindFirstChild("PlayerGui"):FindFirstChild("Ping") or
-               Player:FindFirstChild("PlayerScripts"):FindFirstChild("Ping")
-    end)
-    if success2 and pingStat and pingStat:IsA("TextLabel") then
-        local num = tonumber(string.match(pingStat.Text, "%d+"))
-        if num then return num end
-    end
-
-    local t0 = tick()
-    local temp = Instance.new("BoolValue", ReplicatedStorage)
-    temp.Name = "PingTest_"..tostring(math.random(10000,99999))
-    task.wait(0.1)
-    local t1 = tick()
-    temp:Destroy()
-    return math.clamp((t1-t0)*1000,50,300)
-end
-
 local function dupeItem()
     if Cooldown then return false end
     Cooldown = true
@@ -14587,39 +14561,35 @@ local function dupeItem()
     -- Prepare tool
     if Tool.Parent == Player.Character then
         Tool.Parent = Player.Backpack
-        task.wait(0.2)
+        task.wait(0.5)
     end
 
     local marketConnection = ReplicatedStorage.MarketItems.ChildAdded:Connect(function(item)
         if item.Name == ToolName then
-            local owner = item:WaitForChild("owner", 2)
+            local owner = item:WaitForChild("owner", 3) -- 3 second timeout
             if owner and owner.Value == Player.Name then
                 ToolId = item:GetAttribute("SpecialId")
             end
         end
     end)
 
-    -- Calculate dynamic delays
-    local ping = getPing()
-    local listDelay = 0.25 + ((math.clamp(ping, 0, 300) / 300) * 0.03)
-
     -- Phase 1: List item
     ReplicatedStorage.ListWeaponRemote:FireServer(ToolName, 99999)
-    task.wait(listDelay)
+    task.wait(FixedWaitTime) -- Fixed 3 second wait
 
-    -- Phase 2: Store item (critical wait time)
+    -- Phase 2: Store item
     ReplicatedStorage.BackpackRemote:InvokeServer("Store", ToolName)
-    task.wait(DupeDelay) -- Crucial wait time for 100% success
+    task.wait(FixedWaitTime) -- Fixed 3 second wait
 
     -- Phase 3: Remove from market
     if ToolId then
         ReplicatedStorage.BuyItemRemote:FireServer(ToolName, "Remove", ToolId)
-        task.wait(0.5)
+        task.wait(FixedWaitTime) -- Fixed 3 second wait
     end
 
     -- Phase 4: Grab item twice
     ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
-    task.wait(0.2)
+    task.wait(FixedWaitTime) -- Fixed 3 second wait
     ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
 
     marketConnection:Disconnect()
@@ -14658,10 +14628,9 @@ DupingSection:button({
 RunService.Heartbeat:Connect(function()
     if AutoDupe and not Cooldown then
         dupeItem()
-        task.wait(1) -- Delay between auto dupes
+        task.wait(1) -- Small delay between auto dupes
     end
 end)
-
                 DupingSection:label({wrapped = true, name = "This might bug if you have more than 1 of the item you're duping!"})
 
                 local VulnerabilitySection = Column:section({name = "Vulnerability Section", size = 0.347, default = false, side = 'right', icon = GetImage("unlocked.png")}) 
