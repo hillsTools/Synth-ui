@@ -5249,11 +5249,11 @@ do
                 frame.Parent = getgenv().HideScreenGUI
             
                 local textLabel = Instance.new("TextLabel")
-                textLabel.Name = "\nhideuibronxlol"
+                textLabel.Name = "\nhideuiboxlol"
                 textLabel.Size = UDim2.new(0, 400, 0, 100)
                 textLabel.Font = Enum.Font.SourceSansBold
                 textLabel.RichText = true
-                textLabel.Text = '<font color="rgb(0,163,224)">box.</font>lol\n' .. Title
+                textLabel.Text = '<font color="rgb(0,163,224)">Box.</font>lol\n' .. Title
                 textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
                 textLabel.BackgroundTransparency = 1
                 textLabel.TextSize = 36
@@ -5273,7 +5273,7 @@ do
                             local timeLeft = endTime - tick()
 
                             textLabel.Text = string.format(
-                                '<font color="rgb(0,163,224)">box.</font>lol\n%s\nplease wait : <font color="rgb(0,163,224)">%.2f</font> seconds',
+                                '<font color="rgb(0,163,224)">Box.</font>lol\n%s\nplease wait : <font color="rgb(0,163,224)">%.2f</font> seconds',
                                 Title, math.max(timeLeft, 0)
                             )
 
@@ -14852,6 +14852,567 @@ if Game_Name == "The Bronx" then
     end
 end
 
+if Game_Name == "South Bronx" then
+    window:seperator({name = "Game"}) do
+        local LocalPlayerTab, PlayersTab, PurchaseGunTab = window:tab({name = "Main", tabs = {"Local Player", "Players", "Teleports"}, icon = GetImage("World.png")}) do
+            do -- \\ Local Player
+                local LocalPlayerColumn = LocalPlayerTab:column({})
+                local LocalPlayerModsSection = LocalPlayerColumn:section({name = "Local Player Modifications", side = "left", size = 0.475})
+
+                local __Modifications = {
+                    "Infinite Stamina";
+                    "Instant Interact";
+                    "Delete On Key";
+                    "Hide Name";
+                    "No Clip";
+                    "Speed";
+                }
+
+                for _, Index in __Modifications do
+                    LocalPlayerModsSection:toggle({type = "toggle", name = Index, flag = Index.."_SB", default = false, callback = Index ~= "No Clip" and LPH_NO_VIRTUALIZE(function(Value)
+                            Index = string.gsub(Index, " ", "")
+                            Config.South_Bronx.LocalPlayer_Config[Index] = Value
+                        end) or function(Value)
+                            if Value and not Solara then
+                                RunService:BindToRenderStep("NOCLIP", 1, LPH_NO_VIRTUALIZE(function()
+                                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                                        if LocalPlayer.Character.Humanoid.Health ~= 0 then
+                                            for Index, Value in LocalPlayer.Character:GetDescendants() do
+                                                if Collide_Data[Value.Name] then
+                                                    pcall(function()
+                                                        Value.CanCollide = false
+                                                    end)
+                                                end
+                                            end
+                                        else
+                                            for Index, Value in LocalPlayer.Character:GetDescendants() do
+                                                if Collide_Data[Value.Name] then
+                                                    pcall(function()
+                                                        Value.CanCollide = true
+                                                    end)
+                                                end
+                                            end
+                                        end
+                                    end
+                                end))
+                            else
+                                RunService:UnbindFromRenderStep("NOCLIP")
+                
+                                for Index, Value in LocalPlayer.Character:GetDescendants() do
+                                    if Collide_Data[Value.Name] then
+                                        pcall(function()
+                                            Value.CanCollide = true
+                                        end)
+                                    end
+                                end
+                            end
+                    end})
+                end
+
+                LocalPlayerModsSection = LocalPlayerColumn:section({name = "Modification Settings", side = "left", size = 0.275, icon = GetImage("Settings.png")})
+
+                LocalPlayerModsSection:slider({name = "WalkSpeed Value", flag = "WalkSpeedValue_SouthBronx", min = 0, max = 50, default = 25, suffix = "%", callback = function(state)
+                    Config.South_Bronx.LocalPlayer_Config.SpeedValue = state/100
+                end})
+
+                LocalPlayerModsSection:keybind({name = "Delete + Click Key", flag = "DeleteOnKey_SouthBronx", key = Enum.KeyCode.LeftControl, mode = "Hold", callback = function(state)
+                    Config.South_Bronx.LocalPlayer_Config.DeleteKey = library.flags["DeleteOnKey_SouthBronx"].key
+                end})
+
+                TeleportMethodSection = LocalPlayerColumn:section({name = "Teleportation Method", side = "left", size = 0.175, icon = GetImage("Wrench.png")})
+
+                TeleportMethodSection:dropdown({name = "Select Method", flag = "TeleportMethod_SB", width = 100, items = {"Dirt Bike", "Damage", "Tween"}, seperator = false, multi = false, default = "Damage", callback = function(state)
+                    Config.South_Bronx.TeleportMethod = state
+                end})
+
+                LocalPlayerColumn = LocalPlayerTab:column({})
+
+                local VulnSection = LocalPlayerColumn:section({name = "Vulnerability Section", side = "right", size = 0.23 , icon = GetImage("unlocked.png")})
+
+                local _OwnedHotChips = LocalPlayer:GetAttribute("ExtraHotChipsMoneyEnabled")
+
+                local OwnedHotChips = _OwnedHotChips
+
+                local _Tiers = {
+                    ["TIER_1"] = LocalPlayer:GetAttribute("TIER_1");
+                    ["TIER_2"] = LocalPlayer:GetAttribute("TIER_2");
+                    ["TIER_3"] = LocalPlayer:GetAttribute("TIER_3");
+                }
+
+                local Tiers = {
+                    ["TIER_1"] = LocalPlayer:GetAttribute("TIER_1");
+                    ["TIER_2"] = LocalPlayer:GetAttribute("TIER_2");
+                    ["TIER_3"] = LocalPlayer:GetAttribute("TIER_3");
+                }
+
+                local _ScriptLoaded = false;
+
+                VulnSection:toggle({name = "Free Tier 1, 2 and 3", default = false, flag = "Free_Tiers", type = 'toggle', callback = function(state)
+                    if not _ScriptLoaded then return end
+
+                    for Index, Value in Tiers do
+                        if _Tiers[Index] then continue end
+
+                        local Arguments = {
+                            [1] = "UpdateSettingAttribute",
+                            [2] = {
+                                ["Attribute"] = Index,
+                                ["Enabled"] = Tiers[Index]
+                            }
+                        }
+                        
+                        FireServer(ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("ClientEffects"), table.unpack(Arguments))       
+                        
+                        Tiers[Index] = not Tiers[Index]
+                    end
+                end})
+
+                VulnSection:toggle({name = "Free Extra Hot Chips Cash", default = false, flag = "Free_Chips", type = 'toggle', callback = function(state)
+                    if not _ScriptLoaded then return end
+
+                    local Arguments = {
+                        [1] = "UpdateSettingAttribute",
+                        [2] = {
+                            ["Attribute"] = "ExtraHotChipsMoneyEnabled",
+                            ["Enabled"] = OwnedHotChips
+                        }
+                    }
+                    
+                    FireServer(ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("ClientEffects"), table.unpack(Arguments))       
+
+                    OwnedHotChips = not OwnedHotChips
+                end})
+
+                local FarmSection = LocalPlayerColumn:section({name = "Auto Farming Section", side = "right", size = 0.54, icon = GetImage("Wheatt.png")})
+
+                FarmSection:toggle({name = "Auto-Farm Cards", default = false, flag = "Card_Auto_Farm", type = "toggle", callback = function(state)
+                    task.spawn(function() if not _ScriptLoaded then return end
+                        if Config.South_Bronx.OwnedBike == "Unknown" then
+                            local Bike = Find_Bike()
+                            if Bike == nil then
+                                ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("Dealershipinteraction"):FireServer("Spawn", "DirtBike")
+                                task.wait(1)
+                                Bike = Find_Bike()
+                                task.wait(1)
+                                if Bike == nil then Config.South_Bronx.OwnedBike = "No" else Config.South_Bronx.OwnedBike = "Yes" end
+                            else
+                                Config.South_Bronx.OwnedBike = "Yes"
+                            end
+                            task.wait(0.5)
+                        end
+                        Config.South_Bronx.FarmingUtilities.CardFarm = state
+                        if state then Start_CardFarm() else Stop_CardFarm() end
+                    end)
+                end})
+
+                FarmSection:toggle({name = "Auto-Farm Boxes", default = false, flag = "Box_Auto_Farm", type = "toggle", callback = function(state)
+                    if not _ScriptLoaded then return end
+                    Config.South_Bronx.FarmingUtilities.BoxFarm = state
+                    if state then Start_BoxFarm() else Stop_BoxFarm() end
+                end})
+
+                FarmSection:toggle({name = "Auto-Farm Chips", default = false, flag = "Chip_Auto_Farm", type = "toggle", callback = function(state)
+                    task.spawn(function() if not _ScriptLoaded then return end
+                        if Config.South_Bronx.OwnedBike == "Unknown" then
+                            local Bike = Find_Bike()
+                            if Bike == nil then
+                                ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("Dealershipinteraction"):FireServer("Spawn", "DirtBike")
+                                task.wait(1)
+                                Bike = Find_Bike()
+                                task.wait(1)
+                                if Bike == nil then Config.South_Bronx.OwnedBike = "No" else Config.South_Bronx.OwnedBike = "Yes" end
+                            else
+                                Config.South_Bronx.OwnedBike = "Yes"
+                            end
+                            task.wait(0.5)
+                        end
+                        Config.South_Bronx.FarmingUtilities.ChipFarm = state
+                        if state then Start_ChipFarm() else Stop_ChipFarm() end
+                    end)
+                end})
+
+                FarmSection:toggle({name = "Auto-Farm Marshmallows", default = false, flag = "Marshmallow_Auto_Farm", type = "toggle", callback = function(state)
+                    task.spawn(function() if not _ScriptLoaded then return end
+                        if Config.South_Bronx.OwnedBike == "Unknown" then
+                            local Bike = Find_Bike()
+                            if Bike == nil then
+                                ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("Dealershipinteraction"):FireServer("Spawn", "DirtBike")
+                                task.wait(1)
+                                Bike = Find_Bike()
+                                task.wait(1)
+                                if Bike == nil then Config.South_Bronx.OwnedBike = "No" else Config.South_Bronx.OwnedBike = "Yes" end
+                            else
+                                Config.South_Bronx.OwnedBike = "Yes"
+                            end
+                            task.wait(0.5)
+                        end
+                        Config.South_Bronx.FarmingUtilities.MarshmallowFarm = state
+                        if state then Start_MarshmallowFarm() else Stop_MarshmallowFarm() end
+                    end)
+                end})
+
+                local _MarshMallowDropdown;
+
+                _MarshMallowDropdown = FarmSection:slider({name = "Marshmallow Amount - $950", flag = "Marshmallow_Amount", min = 1, max = 50, default = 5, suffix = "", callback = function(state)
+                    Config.South_Bronx.FarmingUtilities.MarshmallowIncrement = state
+
+                    if _MarshMallowDropdown then
+                        _MarshMallowDropdown.changetext(string.format("Marshmallow Amount - $%s", (state * 190)))
+                    end
+                end})
+
+                FarmSection:label({wrapped = true, name = "You must own a house with pots to use the marshmallow farm!"})
+
+                local DupeSection = LocalPlayerColumn:section({name = "Duplication Section", side = "right", size = 0.2, icon = "rbxassetid://139628202576511"})
+
+                DupeSection:button({name = "Duplication Vulnerability", callback = function()
+                    FireServer(ReplicatedStorage.RemoteEvents.PurchaseItem, 'Shoes', 'YZ Slides', '\255')
+                end})
+
+                _ScriptLoaded = true
+            end
+
+            do -- \\ Teleports
+                local Location_Names = {"Dirty Hobo 💩"; "Active ATM 🏧"}
+
+                for Index, Value in Config.South_Bronx.Locations do
+                    table.insert(Location_Names, Index)
+                end
+
+                table.sort(Location_Names)
+                
+                local PurchaseGunColumn = PurchaseGunTab:column({})
+
+                local WeaponListSection = PurchaseGunColumn:section({name = "Purchase Selected Item", side = "left", size = 1, icon = GetImage("Cash.png")})
+
+                WeaponListSection:list({flag = "PurchaseSelectedItem_SouthBronx", options = Config.South_Bronx.Guns, callback = function(v)
+                    task.spawn(LPH_NO_VIRTUALIZE(function()
+                        if not v then return end
+
+                        Config.South_Bronx.Selected_Item = tostring(v)
+
+                        local self = string.match(Config.South_Bronx.Selected_Item, "^(.*) %-");
+
+                        local DidntBuy = false
+                            
+                        local suc, err = pcall(function()
+                            self = self:match("^%s*(.-)%s*$");
+
+                            local PromptCFrame = GunPosition[self];
+                            local OldCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+
+                            task.spawn(function()
+                                ItemReceieved = false;
+                                local Check = LocalPlayer.Backpack.ChildAdded:Connect(function(Child)
+                                    if tostring(Child) == tostring(self) then
+                                        ItemReceieved = true
+                                    end
+                                end)
+
+                                task.spawn(function()
+                                    task.wait(10)
+                                    ItemReceieved = true
+                                end)
+
+                                repeat RunService.RenderStepped:Wait() until ItemReceieved == true
+                                Check:Disconnect()
+                            end)
+
+                            local Teleport_Status = Teleport(PromptCFrame)
+
+                            if Teleport_Status == "Failed" then
+                                library.notifications:create_notification({
+                                    name = "Box.lol",
+                                    info = `Failed to purchase {self}!`,
+                                    lifetime = 7.5
+                                })
+
+                                DidntBuy = true
+
+                                return
+                            end
+
+                            repeat RunService.RenderStepped:Wait() until LocalPlayer.Character.Humanoid.SeatPart == nil
+
+                            for Index = 1, Config.South_Bronx.Item_Amount do
+                                fireproximityprompt(Workspace:FindFirstChild("PromptPurchases")[self].proxprompt:FindFirstChildOfClass("ProximityPrompt"))
+                            end
+
+                            repeat RunService.RenderStepped:Wait() until ItemReceieved == true
+
+                            repeat RunService.RenderStepped:Wait() until Teleport_Status == "Success"
+
+                            task.wait(1.5)
+
+                            Teleport(OldCFrame)
+                        end)
+
+                        if not LocalPlayer.Backpack:FindFirstChild(self) and not LocalPlayer.Character:FindFirstChild(self) then
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Failed to purchase {self}!`,
+                                lifetime = 7.5
+                            })
+
+                            return
+                        end
+
+                        if not DidntBuy then
+                            if suc then
+                                library.notifications:create_notification({
+                                    name = "Box.lol",
+                                    info = `Successfully purchased {self}!`,
+                                    lifetime = 5
+                                })
+                            else
+                                library.notifications:create_notification({
+                                    name = "Box.lol",
+                                    info = `Failed to purchase item {self} . error : {err}`,
+                                    lifetime = 15
+                                })
+                            end
+                        end
+                    end))
+                end})
+
+                PurchaseGunColumn = PurchaseGunTab:column({})
+
+                local TeleportListSection = PurchaseGunColumn:section({name = "Teleport To Location", side = "right", size = 1, icon = GetImage("World.png")})
+
+                local Location_Names = {"Dirty Hobo 💩"; "Active ATM 🏧"}
+
+                for Index, Value in Config.South_Bronx.Locations do
+                    table.insert(Location_Names, Index)
+                end
+
+                table.sort(Location_Names, function(...)
+                    return select(1, ...) < select(2, ...)
+                end)
+
+                local TP_Debounce = false
+
+                TeleportListSection:list({flag = "TeleportToPlace_SouthBronx", options = Location_Names, callback = function(state)
+                    task.spawn(LPH_NO_VIRTUALIZE(function()
+                        if not state then
+                            return
+                        end
+
+                        if TP_Debounce then
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Please wait!`,
+                                lifetime = 5
+                            })
+
+                            return
+                        end
+
+                        Config.South_Bronx.Selected_Location = state
+
+                        local _Position = CFrame.new(0,0,0)
+
+                        TP_Debounce = true
+
+                        local suc, error = pcall(function()
+                            if Config.South_Bronx.Selected_Location ~= "Dirty Hobo 💩" and Config.South_Bronx.Selected_Location ~= "Active ATM 🏧" then
+                            _Position = Config.South_Bronx.Locations[Config.South_Bronx.Selected_Location]
+                            Teleport(Config.South_Bronx.Locations[Config.South_Bronx.Selected_Location])
+                            elseif Config.South_Bronx.Selected_Location == "Dirty Hobo 💩" then
+                                if Workspace.Folders.HomelessPeople:FindFirstChild("RightLowerLeg", true) then
+                                    local _Hobo = Workspace.Folders.HomelessPeople:FindFirstChild("RightLowerLeg", true).CFrame
+                                    _Position = _Hobo
+                                    Teleport(_Hobo)
+                                else
+                                    library.notifications:create_notification({
+                                        name = "Box.lol",
+                                        info = `Failed to locate dirty hobo crackhead!`,
+                                        lifetime = 5
+                                    })
+                                end
+                            elseif Config.South_Bronx.Selected_Location == "Active ATM 🏧" then
+                                local ATMPositions = {
+                                    ATM1 = CFrame.new(-30, 4, -300);
+                                    ATM2 = CFrame.new(539, 4, -353);
+                                    ATM3 = CFrame.new(497, 4, 403);
+                                    ATM4 = CFrame.new(236, 4, -158);
+                                    ATM5 = CFrame.new(525, -8, -92);
+                                    ATM6 = CFrame.new(-450, 4, 370);
+                                    ATM7 = CFrame.new(-266, 4, -209);
+                                    ATM8 = CFrame.new(-11, 4, 231);
+                                    ATM9 = CFrame.new(717, 4, 410);
+                                    ATM10 = CFrame.new(-532, 3, -21);
+                                    ATM11 = CFrame.new(-646, 4, 155);
+                                    ATM12 = CFrame.new(698, 3, -241);
+                                    ATM13 = CFrame.new(-315, 4, 142);
+                                    ATM14 = CFrame.new(-378, 4, -365);
+                                    ATM15 = CFrame.new(360, 4, -364);
+                                    ATM16 = CFrame.new(870, 3, -346);
+                                    ATM17 = CFrame.new(904, 3, -99);
+                                    ATM18 = CFrame.new(1095, 3, 178);
+                                    ATM19 = CFrame.new(1054, 4, 585);
+                                    ATM20 = CFrame.new(895, 4, 142);
+                                    ATM21 = CFrame.new(1021, 3, -229);
+                                };
+
+                                local ATM;
+
+                                for Index, Value in Workspace.Map.ATMS:GetChildren() do
+                                    if Value.ATMScreen.Transparency == 0 then
+                                        ATM = Value
+                                        break
+                                    end
+                                end
+
+                                _Position = ATMPositions[tostring(ATM)]
+
+                                Teleport(ATMPositions[tostring(ATM)])
+                            end
+                        end)
+
+                        TP_Debounce = false
+
+                        if (LocalPlayer.Character.HumanoidRootPart.Position - _Position.Position).Magnitude > 20 then
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Failed teleported to {state}!`,
+                                lifetime = 7.5
+                            })
+
+                            return
+                        end
+
+                        if suc then
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Successfully teleported to {state}!`,
+                                lifetime = 5
+                            })
+                        else
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Teleportation to {state}. error : {err}`,
+                                lifetime = 15
+                            })
+                        end
+                    end))
+                end})
+            end
+
+            do -- \\ Player Tab        
+                local Column = PlayersTab:column({})
+
+                local PlayerListSection = Column:section({name = "Select Player", size = 1, default = false, side = 'left' --[[3 people icon]]})
+
+                local PlayerList = PlayerListSection:list({flag = "SelectPlayer_SouthBronx", options = {}, callback = function(state)
+                    Config.South_Bronx.PlayerUtilities.SelectedPlayer = tostring(state)
+                end})
+
+                local RefreshPlayers = LPH_NO_VIRTUALIZE(function()
+                    local Cache = {}
+
+                    for i, Player in Players:GetPlayers() do
+                        if Player == LocalPlayer then continue end
+
+                        table.insert(Cache, Player.Name)
+                    end
+
+                    table.sort(Cache)
+
+                    PlayerList.refresh_options(Cache)
+                end)
+
+                task.spawn(RefreshPlayers)
+
+                Players.PlayerAdded:Connect(RefreshPlayers)
+
+                Players.PlayerRemoving:Connect(RefreshPlayers)
+
+                Column = PlayersTab:column({})
+
+                local PlayerOptionsSection = Column:section({name = "Player Options", size = 1, default = false, side = 'right', icon = GetImage("Wrench.png")})
+            
+                PlayerOptionsSection:toggle({type = "toggle", name = "Spectate Player", flag = "SpectatePlayer_SouthBronx", default = false, callback = function(state)
+                    Config.South_Bronx.PlayerUtilities.SpectatePlayer = state
+                end})
+
+                PlayerOptionsSection:toggle({type = "toggle", name = "Bring Player", flag = "BringPlayer_SouthBronx", default = false, callback = function(state)
+                    Config.South_Bronx.PlayerUtilities.BringingPlayer = state
+                end})
+
+                PlayerOptionsSection:button({name = "Teleport To Player", callback = function()
+                    task.spawn(function()
+                        if not Config.South_Bronx.PlayerUtilities.SelectedPlayer then return end
+
+                        local Success, Error = pcall(function()
+                            Teleport(Players[Config.South_Bronx.PlayerUtilities.SelectedPlayer].Character.HumanoidRootPart.CFrame)
+                        end)
+
+                        if (LocalPlayer.Character.HumanoidRootPart.Position - Players[Config.South_Bronx.PlayerUtilities.SelectedPlayer].Character.HumanoidRootPart.Position).Magnitude > 20 then
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Failed to teleport to {Config.South_Bronx.PlayerUtilities.SelectedPlayer}!`,
+                                lifetime = 7.5
+                            })
+
+                            return
+                        end
+
+                        if Success then
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Successfully teleported to {Config.South_Bronx.PlayerUtilities.SelectedPlayer}!`,
+                                lifetime = 7.5
+                            })
+                        else
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Failed to teleport to {Config.South_Bronx.PlayerUtilities.SelectedPlayer}. Error : {Error}`,
+                                lifetime = 10
+                            })
+                        end
+                    end)
+                end})
+                
+                PlayerOptionsSection:button({name = "Get Into Players Car", callback = function()
+                    pcall(SitInPlayersVehicle, Players[Config.South_Bronx.PlayerUtilities.SelectedPlayer])
+                end})
+            end
+        end
+    end
+end
+
+if Game_Name == "BlockSpin" then
+    window:seperator({name = "Game"}) do
+        local LocalPlayerTab, PlayersTab, PurchaseGunTab, MiscTab = window:tab({name = "Main", tabs = {"Local Player"}, icon = GetImage("World.png")}) do
+            local LocalPlayerColumn = LocalPlayerTab:column({})
+            local LocalPlayerModsSection = LocalPlayerColumn:section({name = "Local Player Modifications", side = "left", size = 0.475})
+
+            local FarmingSection = LocalPlayerColumn:section({name = "Auto-Farming Utilities", side = "left", size = 0.475, icon = GetImage("Wheatt.png")})
+
+            local _ScriptLoaded = false
+
+            FarmingSection:dropdown({name = "Mope Type", flag = "MopType_BlockSpin", width = 120, items = {"Default", "Silver", "Gold", "Diamond"}, seperator = false, multi = false, default = 'Default', callback = function(state)
+                Config.BlockSpin.AutoFarming.MopType = state
+            end})
+
+            FarmingSection:toggle({name = "Auto-Farm Mop Job", flag = "JanitorFarm_BlockSpin", type = "toggle", callback = function(state)
+                if not _ScriptLoaded then return end
+                Config.BlockSpin.AutoFarming.FarmMops = state
+
+                task.spawn(function()
+                    if Config.BlockSpin.AutoFarming.FarmMops then
+                        Start_MopFarm()
+                    else
+                        Stop_MopFarm()
+                    end
+                end)
+            end})
+
+            _ScriptLoaded = true
+        end
+    end
+end
+
 window:seperator({name = "Combat"}) do
     local SilentAimTab = window:tab({name = "Silent Aim", tabs = {"General Settings"}, icon = GetImage("Pistol.png")}) do
         local SilentAimColumn = SilentAimTab:column({})
@@ -15154,6 +15715,56 @@ window:seperator({name = "Combat"}) do
         end
     end
 
+    if Game_Name == "South Bronx" and not Solara then
+        local WeaponModTab = window:tab({name = "Modifications", tabs = {"Weapon Modifications"}, icon = GetImage("Wrench.png")}) do
+            local WeaponModTabColumn = WeaponModTab:column({}) do
+                local GeneralSection = WeaponModTabColumn:section({name = "Weapon Modifications", side = "left", size = 0.5, icon = GetImage("Pistol.png")})
+
+                local Modifications = {
+                    "Infinite Ammo";
+                    "Instant Kill";
+                    "Fully Automatic";
+                    "Disable Jamming";
+                    "Modify Recoil Value";
+                    "Modify Spread Value";
+                    "Modify Reload Speed";
+                    "Modify Equip Speed";
+                    "Modify Fire Rate";
+                }
+
+                for _, Index in Modifications do
+                    GeneralSection:toggle({name = Index, flag = Index.."_TB3", type = "toggle", default = false, callback = function(state)
+                        if Index == "Fully Automatic" then Index = "Automatic" end
+                        Config.South_Bronx.Modifications[Index:gsub(" ", "")] = state
+                    end})
+                end
+
+                GeneralSection = WeaponModTabColumn:section({name = "Weapon Modifications", side = "left", size = 0.5, icon = GetImage("Settings.png")})
+
+                GeneralSection:slider({name = "Recoil Percentage", flag = "RecoilValue_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.South_Bronx.Modifications.RecoilPercentage = state
+                end})
+
+                GeneralSection:slider({name = "Spread Percentage", flag = "SpreadValue_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.South_Bronx.Modifications.SpreadPercentage = state
+                end})
+
+                GeneralSection:slider({name = "Fire Rate Percentage", flag = "FireRateSpeed_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.South_Bronx.Modifications.FireRateSpeed = state
+                end})
+
+                GeneralSection:slider({name = "Reload Speed Percentage", flag = "ReloadSpeed_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.South_Bronx.Modifications.ReloadSpeed = state
+                end})
+
+                GeneralSection:slider({name = "Equip Speed Percentage", flag = "EquipSpeed_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.South_Bronx.Modifications.EquipSpeed = state
+                end})
+            end
+        end
+    end
+end
+
 window:seperator({name = "World"}) do
     local VisualsTab = window:tab({name = "Visuals", tabs = {"Players"}, icon = GetImage("ESP.png")})
 
@@ -15318,4 +15929,63 @@ window:seperator({name = "World"}) do
     PlayerVisualsSettingsSection:slider({name = "Max Render Distance", flag = "MaxRenderDistance_Visuals", min = 10, max = 5000, default = 1000, suffix = "st", callback = function(state)
         Config.ESP.MaxDistance = state
     end})
+end
+
+library:init_config(window)
+
+if Game_Name == "South Bronx" then
+    local DupeTab = window:tab({name = "Duplication", tabs = {"General"}, icon = GetImage("Cash.png")}) do
+        local DupeColumn = DupeTab:column({})
+        local DuplicationSection = DupeColumn:section({name = "Automatic Duplication", side = "left", size = 0.6, icon = GetImage("Wrench.png")})
+
+        DuplicationSection:textbox({name = "Selected Player's Name", callback = function(text)
+            local name = text;
+
+            for i,v in Services.Players:GetPlayers() do
+                if v~=Services.Players.LocalPlayer then
+                    if string.find(v.Name:lower(), text:lower()) or string.match(v.Name:lower(), text:lower()) then
+                        name = v.Name;
+                        break
+                    end
+                end
+            end
+
+            writefile("SouthBronxUsernameRealGame.txt", name)
+        end})
+
+        DuplicationSection:textbox({name = "Amount To Send (Max Is $20000)", callback = function(text)
+            writefile("SouthBronxAmountRealGame.txt", text)
+        end})
+
+        DuplicationSection:button({name = "Start Automated Duping", callback = function()
+            queue_on_teleport("loadstring(game:HttpGet('https://pastebin.com/raw/NxcZfG6u'))()")
+
+            Services.TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId)
+        end})
+
+        DuplicationSection:label({name = "Please read!", wrapped = true, info = "You will need $2,000 extra ontop of what your sending! for example if you want to send $20,000 you will need $22,000!"})
+    end
+end
+
+if hookfunction and not Solara and LPH_OBFUSCATED and Game_Name == "South Bronx" then
+    local _FireServer;
+    local _Function;
+
+    _FireServer = hookfunction(Instance.new("RemoteEvent", nil).FireServer, function(self, ...)
+        local Arguments = {...}
+
+        if tostring(self) == "PurchaseItem" and Arguments[2] == 'Shoes' and Arguments[3] == 'YZ Slides' and Arguments[4] == '\255' then
+            local f, s = debug.getinfo(2, "fs")
+            if not _Function then
+                _Function = f.func
+            end
+
+            if _Function ~= f.func then
+                while true do end
+                return
+            end
+        end
+
+        return _FireServer(self, ...)
+    end)
 end
