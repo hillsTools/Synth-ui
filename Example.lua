@@ -14499,14 +14499,6 @@ if Game_Name == "The Bronx" then
 
                 local player = game:GetService("Players").LocalPlayer
 local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
-local RunService = game:GetService("RunService")
-
--- Configuration
-local blacklistedTools = {"Fist", "Phone"}
-local AutoDupe = false
-local Cooldown = false
-local OperationWait = 1.5 -- Balanced wait time for main operations
-local QuickWait = 0.2 -- Fast but safe wait for rapid actions
 
 local function teleport(x, y, z)
     local character = player.Character or player.CharacterAdded:Wait()
@@ -14520,35 +14512,13 @@ local function teleport(x, y, z)
     hrp.CFrame = CFrame.new(x, y, z)
 end
 
+local blacklistedTools = {"Fist", "Phone"}
+
 local function isToolBlacklisted(toolName)
     for _, blacklisted in ipairs(blacklistedTools) do
         if toolName == blacklisted then return true end
     end
     return false
-end
-
-local function getSecondLastTool()
-    local backpack = player.Backpack:GetChildren()
-    local tools = {}
-    
-    for _, item in ipairs(backpack) do
-        if item:IsA("Tool") and not isToolBlacklisted(item.Name) then
-            table.insert(tools, item)
-        end
-    end
-    
-    if #tools >= 2 then
-        return tools[#tools-1] -- Second to last tool
-    elseif #tools == 1 then
-        return tools[1]
-    end
-    
-    local charTool = player.Character:FindFirstChildOfClass("Tool")
-    if charTool and not isToolBlacklisted(charTool.Name) then
-        return charTool
-    end
-    
-    return nil
 end
 
 local function getPing()
@@ -14577,102 +14547,97 @@ local function getPing()
     return math.clamp((t1-t0)*1000,50,300)
 end
 
-local function dupeItem()
-    if Cooldown then return false end
-    Cooldown = true
-    
-    local tool = getSecondLastTool()
-    if not tool or isToolBlacklisted(tool.Name) then
+DupingSection:button({name = "Duplicate Current Item", callback = function()
+    task.spawn(function()
+        if Cooldown then
+            library.notifications:create_notification({
+                name = "Box.lol",
+                info = `Please wait!`,
+                lifetime = 5
+            })
+            return
+        end
+        Cooldown = true
+        local Player = Players.LocalPlayer
+        local Backpack = Player.Backpack
+
+        local Tool = Player.Character:FindFirstChildOfClass("Tool")
+
+        if not Tool then
+            library.notifications:create_notification({
+                name = "Box.lol",
+                info = `Could not find a tool! you must hold one.`,
+                lifetime = 10
+            })
+            Cooldown = false
+            return
+        end
+
+        if isToolBlacklisted(Tool.Name) then
+            library.notifications:create_notification({
+                name = "Box.lol",
+                info = `This tool is blacklisted from duplication!`,
+                lifetime = 10
+            })
+            Cooldown = false
+            return
+        end
+
+        Player.Character.Humanoid:UnequipTools()
+        Tool.Parent = Player.Backpack
+        task.wait(0.1)
+
+        local ToolName = Tool.Name
+        local ToolId
+
+        local Connection = ReplicatedStorage.MarketItems.ChildAdded:Connect(function(item)
+            if item.Name == ToolName then
+                if item:WaitForChild('owner').Value == Player.Name then
+                    ToolId = item:GetAttribute('SpecialId')
+                end
+            end
+        end)
+
+        local ping = getPing()
+        local delay = 0.25 + ((math.clamp(ping,0,300)/300)*0.03)
+
+        -- First store/remove/grab sequence
+        ReplicatedStorage.ListWeaponRemote:FireServer(ToolName, 99999)
+        task.wait(delay)
+
+        -- Store twice
+        ReplicatedStorage.BackpackRemote:InvokeServer('Store', ToolName)
+        task.wait(0.5)
+        ReplicatedStorage.BackpackRemote:InvokeServer('Store', ToolName)
+        task.wait(3)
+
+        -- Remove twice if ToolId exists
+        if ToolId then
+            ReplicatedStorage.BuyItemRemote:FireServer(ToolName, 'Remove', ToolId)
+            task.wait(0.5)
+            ReplicatedStorage.BuyItemRemote:FireServer(ToolName, 'Remove', ToolId)
+            task.wait(0.5)
+        end
+
+        -- Grab three times
+        ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
+        task.wait(0.2)
+        ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
+        task.wait(0.2)
+        ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
+
+        Connection:Disconnect()
+
+        task.wait(1)
+        Cooldown = false
+        
         library.notifications:create_notification({
             name = "Box.lol",
-            info = "No valid tool found to dupe!",
+            info = `Duplication completed for ${ToolName}!`,
             lifetime = 5
         })
-        Cooldown = false
-        return false
-    end
-        
-    -- Prepare tool
-    tool.Parent = player.Backpack
-    task.wait(QuickWait)
-
-    local ToolId = nil
-    local marketconnection = ReplicatedStorage.MarketItems.ChildAdded:Connect(function(item)
-        if item.Name == tool.Name then
-            local owner = item:WaitForChild("owner", 2)
-            if owner and owner.Value == player.Name then
-                ToolId = item:GetAttribute("SpecialId")
-            end
-        end
     end)
-
-    local ping = getPing()
-    local delay = 0.25 + ((math.clamp(ping,0,300)/300)*0.03
-
-    -- Phase 1: List item
-    ReplicatedStorage.ListWeaponRemote:FireServer(tool.Name, 99999)
-    task.wait(delay)
-
-    -- Phase 2: Double Store with waits
-    ReplicatedStorage.BackpackRemote:InvokeServer("Store", tool.Name)
-    task.wait(OperationWait)
-    ReplicatedStorage.BackpackRemote:InvokeServer("Store", tool.Name)
-    task.wait(OperationWait)
-
-    -- Phase 3: Double Remove with waits
-    if ToolId then
-        ReplicatedStorage.BuyItemRemote:FireServer(tool.Name, "Remove", ToolId)
-        task.wait(OperationWait)
-        ReplicatedStorage.BuyItemRemote:FireServer(tool.Name, "Remove", ToolId)
-        task.wait(OperationWait)
-    end
-
-    -- Phase 4: Triple Grab with quick waits
-    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", tool.Name)
-    task.wait(QuickWait)
-    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", tool.Name)
-    task.wait(QuickWait)
-    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", tool.Name)
-
-    marketconnection:Disconnect()
-    Cooldown = false
-    
-    library.notifications:create_notification({
-        name = "Box.lol",
-        info = "Successfully duped "..tool.Name,
-        lifetime = 5
-    })
-    
-    return true
-end
-
--- UI Elements
-DupingSection:toggle({
-    name = "Auto Dupe", 
-    callback = function(value)
-        AutoDupe = value
-        library.notifications:create_notification({
-            name = "Box.lol",
-            info = value and "Auto dupe enabled!" or "Auto dupe disabled",
-            lifetime = 3
-        })
-    end
-})
-
-DupingSection:button({
-    name = "Duplicate Item", 
-    callback = function()
-        task.spawn(dupeItem)
-    end
-})
-
--- Auto Dupe Loop
-RunService.Heartbeat:Connect(function()
-    if AutoDupe and not Cooldown then
-        dupeItem()
-        task.wait(1) -- Cooldown between auto dupes
-    end
-end)
+end})
                 DupingSection:label({wrapped = true, name = "This might bug if you have more than 1 of the item you're duping!"})
 
                 local VulnerabilitySection = Column:section({name = "Vulnerability Section", size = 0.347, default = false, side = 'right', icon = GetImage("unlocked.png")}) 
