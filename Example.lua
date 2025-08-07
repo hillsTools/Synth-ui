@@ -1552,21 +1552,20 @@ do
                 end
 
                 if Config.Thebox.PlayerUtilities.SpectatePlayer then
-                    Set_Spectate = false
-                    local Subject = Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer) and Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character and Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character:FindFirstChild("Humanoid")
+    Set_Spectate = false
+    local Subject = Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer) and Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character and Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character:FindFirstChild("Humanoid")
 
-                    if not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer) or not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character or not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character:FindFirstChild("Humanoid") then
-                        Subject = LocalPlayer.Character.Humanoid
-                    end
+    if not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer) or not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character or not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character:FindFirstChild("Humanoid") then
+        Subject = LocalPlayer.Character.Humanoid
+    end
 
-                    Camera.CameraSubject = Subject
-                else
-                    if not Set_Spectate then
-                        Set_Spectate = true
-
-                        Camera.CameraSubject = LocalPlayer.Character.Humanoid
-                    end
-                end
+    Camera.CameraSubject = Subject
+else
+    if not Set_Spectate then
+        Set_Spectate = true
+        Camera.CameraSubject = LocalPlayer.Character.Humanoid
+    end
+end
             end))
         else
             RunService:BindToRenderStep("MiscSettings", 1000 , LPH_NO_VIRTUALIZE(function()
