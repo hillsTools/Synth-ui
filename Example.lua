@@ -15317,5 +15317,3 @@ window:seperator({name = "World"}) do
         Config.ESP.MaxDistance = state
     end})
 end
-
-library:init_config(window)
