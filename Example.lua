@@ -13980,29 +13980,41 @@ local window = library:window({
 if Game_Name == "The Bronx" then
     window:seperator({name = "Game"}) do
         local LocalPlayerTab, PlayersTab, PurchaseGunTab, MiscTab, SafeTab = window:tab({name = "Main", tabs = {"Local Player", "Players", "Teleports", "Misc", "Safe"}, icon = GetImage("World.png")}) do
-            do
+            do -- \\ Safe Tab
                 local SafeItemColumn = SafeTab:column({})
+
                 local SafeItemSection = SafeItemColumn:section({name = "Safe Selected Item", side = "left", size = 1, icon = GetImage("Lock.png")})
+
                 local _SafeItem = SafeItemSection:list({flag = "SafeSelectedItem_TheBronx", options = {}, callback = function(state)
                     task.spawn(LPH_NO_VIRTUALIZE(function()
-                        if not state then return end
+                        if not state then
+                            return
+                        end
+
                         local Safe, OldCFrame = GetWorkingSafe(), LocalPlayer.Character.HumanoidRootPart.CFrame
                         pcall(Teleport, Safe.ChestClicker.CFrame)
                         local Tool = tostring(state)
                         LocalPlayer.Character:WaitForChild"Humanoid":UnequipTools()
+                        
                         local ItemSafed = false; local OldBackpackRemoved; OldBackpackRemoved = LocalPlayer.Backpack.ChildRemoved:Connect(function(Child)
                             if tostring(Child) == Tool then
                                 ItemSafed = true
                                 OldBackpackRemoved:Disconnect()
                             end
                         end)
+
                         task.delay(3, function()
                             ItemSafed = true
                         end)
+
                         task.wait(0.5)
+
                         ReplicatedStorage.Inventory:FireServer("Change", Tool, "Backpack", Safe)
+
                         repeat task.wait() until ItemSafed == true
+
                         pcall(Teleport, OldCFrame)
+
                         library.notifications:create_notification({
                             name = "Box.lol",
                             info = `Successfully safed {state}!`,
@@ -14010,27 +14022,41 @@ if Game_Name == "The Bronx" then
                         })
                     end))
                 end})
+
                 SafeItemColumn = SafeTab:column({})
+
                 SafeItemSection = SafeItemColumn:section({name = "Take Selected Item", side = "right", size = 1, icon = GetImage("UZI.png")})
+
                 local _TakeItem = SafeItemSection:list({flag = "TakeSelectedItem_TheBronx", options = {}, callback = function(state)
                     task.spawn(LPH_NO_VIRTUALIZE(function()
-                        if not state then return end
+                        if not state then
+                            return
+                        end
+
                         local Safe, OldCFrame = GetWorkingSafe(), LocalPlayer.Character.HumanoidRootPart.CFrame
                         pcall(Teleport, Safe.ChestClicker.CFrame)
+
                         local Tool = tostring(state);
+
                         local ItemSafed = false; local OldBackpackChildAdded; OldBackpackChildAdded = LocalPlayer.Backpack.ChildAdded:Connect(function(Child)
                             if tostring(Child) == Tool then
                                 ItemSafed = true
                                 OldBackpackChildAdded:Disconnect()
                             end
                         end)
+
                         task.delay(3, function()
                             ItemSafed = true
                         end)
+
                         task.wait(0.5)
+
                         ReplicatedStorage.Inventory:FireServer("Change", Tool, "Inv", Safe)
+
                         repeat task.wait() until ItemSafed == true
+
                         pcall(Teleport, OldCFrame)
+
                         library.notifications:create_notification({
                             name = "Box.lol",
                             info = `Successfully took {state} from safe!`,
@@ -14038,56 +14064,79 @@ if Game_Name == "The Bronx" then
                         })
                     end))
                 end})
+
                 local Backpack_ChildAdded, Backpack_ChildRemoved
+
                 local ConnectBackpackToRefreshSafeList = LPH_JIT_MAX(function()
                     LocalPlayer:WaitForChild("Backpack")
+
                     local Refresh = LPH_NO_VIRTUALIZE(function()
                         local Items = {}
+
                         for Index, Value in LocalPlayer.Backpack:GetChildren() do
                             if Value:IsA("Tool") then
                                 table.insert(Items, Value.Name)
                             end
                         end
+
                         table.sort(Items)
+
                         _SafeItem.refresh_options(Items)
+
                         return Items
                     end)
+
                     task.spawn(Refresh)
+                    
                     if Backpack_ChildAdded then
                         Backpack_ChildAdded:Disconnect()
                         Backpack_ChildAdded = nil
                     end
+                                    
                     if Backpack_ChildRemoved then
                         Backpack_ChildRemoved:Disconnect()
                         Backpack_ChildRemoved = nil
                     end
+
                     Backpack_ChildAdded = LocalPlayer.Backpack.ChildAdded:Connect(Refresh)
                     Backpack_ChildRemoved = LocalPlayer.Backpack.ChildRemoved:Connect(Refresh)
                 end)
+
                 Players.PlayerRemoving:Connect(LPH_NO_VIRTUALIZE(function(Player)
                     if Player == LocalPlayer then
                         Backpack_ChildAdded:Disconnect(); Backpack_ChildRemoved:Disconnect()
                     end
                 end))
+
                 task.spawn(ConnectBackpackToRefreshSafeList)
+
                 LocalPlayer.CharacterAdded:Connect(ConnectBackpackToRefreshSafeList)
+
                 local RefreshTakeItemList = LPH_NO_VIRTUALIZE(function()
                     local Items = {}
+
                     for Index, Value in LocalPlayer:WaitForChild("InvData"):GetChildren() do
                         table.insert(Items, Value.Name)
                     end
+
                     table.sort(Items)
+
                     _TakeItem.refresh_options(Items)
+
                     return Items
                 end)
+
                 task.spawn(RefreshTakeItemList)
+
                 LocalPlayer:WaitForChild("InvData").ChildAdded:Connect(RefreshTakeItemList)
                 LocalPlayer:WaitForChild("InvData").ChildRemoved:Connect(RefreshTakeItemList)
             end
 
-            do
+            do -- \\ Local Player Tab
                 local LocalPlayerColumn = LocalPlayerTab:column({})
+
                 local LocalPlayerModsSection = LocalPlayerColumn:section({name = "Local Player Modifications", side = "left", size = 1.0135})
+
                 local __Modifications = {
                     "Infinite Sleep";
                     "Infinite Hunger";
@@ -14097,6 +14146,7 @@ if Game_Name == "The Bronx" then
                     "Auto Pickup Cash";
                     "Auto Pickup Bags";
                     "Disable Camera Bobbing";
+                    --"Disable Cameras";
                     "Disable Blood Effects";
                     "Bypass Locked Cars";
                     "No Jump Cooldown";
@@ -14105,20 +14155,26 @@ if Game_Name == "The Bronx" then
                     "No Knockback";
                     "Respawn Where You Died";
                 }
+
                 for _, Index in __Modifications do
                     LocalPlayerModsSection:toggle({type = "toggle", name = Index, flag = Index, default = false, callback = function(state)
                         Config.TheBronx.PlayerModifications[Index:gsub(" ", "")] = state
                     end})
                 end
+
                 LocalPlayerColumn = LocalPlayerTab:column({})
                 local CharacterModsSection = LocalPlayerColumn:section({name = "Character Modifications", side = "right", size = 0.645, icon = GetImage("Wrench.png")})
+
                 CharacterModsSection:toggle({type = "toggle", name = "Modify WalkSpeed", flag = "ModifyWalkSpeed_TheBronx", default = false, callback = function(state)
                     Config.MiscSettings.ModifySpeed.Enabled = state
                 end})
+
                 CharacterModsSection:toggle({type = "toggle", name = "Modify JumpPower", flag = "ModifyJumpPower_TheBronx", default = false, callback = function(state)
                     Config.MiscSettings.ModifyJump.Enabled = state
                 end})
+
                 CharacterModsSection:toggle({type = "toggle", name = "Click Teleport", flag = "ClickTeleport_TheBronx", default = false})
+
                 local _NoClipToggle = CharacterModsSection:toggle({type = "toggle", name = "No Clip", flag = "NoClip_TheBronx", seperator = true, default = false, callback = function(state)
                     if state then
                         RunService:BindToRenderStep("NOCLIP", 1, LPH_NO_VIRTUALIZE(function()
@@ -14144,6 +14200,7 @@ if Game_Name == "The Bronx" then
                         end))
                     else
                         RunService:UnbindFromRenderStep("NOCLIP")
+
                         for Index, Value in LocalPlayer.Character:GetDescendants() do
                             if Collide_Data[Value.Name] then
                                 pcall(function()
@@ -14153,55 +14210,77 @@ if Game_Name == "The Bronx" then
                         end
                     end
                 end})
+
                 CharacterModsSection:slider({name = "WalkSpeed Value", flag = "WalkSpeedValue_TheBronx", min = 0, max = 250, default = 50, suffix = "%", callback = function(state)
                     Config.MiscSettings.ModifySpeed.Value = state
                 end})
+
                 CharacterModsSection:slider({name = "JumpPower Value", flag = "JumpPowerValue_TheBronx", min = 0, max = 250, default = 7, suffix = "%", callback = function(state)
                     Config.MiscSettings.ModifyJump.Value = state
                 end})
+
                 CharacterModsSection:keybind({name = "Click Teleport Key", flag = "ClickTeleportKey_TheBronx", key = Enum.KeyCode.LeftControl, mode = "Hold", callback = function(state)
                     Config.TheBronx.ClickTeleportActive = state
                 end})
+
                 local UISection = LocalPlayerColumn:section({name = "Toggle Interfaces Section", side = "right", size = 0.225, icon = GetImage("Settings.png")})
+
                 local _UINames, BlacklistedNames = {'ATM GUI'}, {"Dead", "Settings1", "Controls", "FirstShopGUI", "Freecam", "ThaShop2", "WATCH GUI", "NYPD Cars", "CONSTRUCTION LEVEL", "RobPlayerUI", "Bronx LOCKER", 'MobileBeam', 'Settings', 'Flash', 'Enter', 'CopSirens'}
+                
                 for Index, Value in LocalPlayer.PlayerGui:GetChildren() do
                     if Value:IsA("ScreenGui") and not Value.Enabled then
                         if table.find(BlacklistedNames, Value.Name) then continue end
                         table.insert(_UINames, Value.Name)
                     end
                 end 
+
                 local _UI_EnabledToggle;
+
                 UISection:dropdown({name = "Selected UI", flag = "SelectedUI_TB3", width = 120, items = _UINames, seperator = false, multi = false, default = 'Bronx Market 2'})
+
                 _UI_EnabledToggle = UISection:toggle({name = "UI Enabled", type = 'toggle', callback = function(state)
                     task.spawn(LPH_NO_VIRTUALIZE(function()
                         if tostring(library.flags["SelectedUI_TB3"]) == "ATM GUI" then
                             local SelectedUI = LocalPlayer.PlayerGui:FindFirstChild("ATMGui")
+
                             if not SelectedUI and state then
                                 local _Clone = Lighting.Assets.GUI.ATMGui:Clone()
                                 _Clone.Parent = LocalPlayer.PlayerGui
                                 SelectedUI = _Clone
                                 _Clone.Frame.closeBtn.MouseButton1Click:Connect(function()
                                     _UI_EnabledToggle.set(false)
+                                    --_Clone:Destroy()
                                 end)
                             end
+
                             if not state and SelectedUI then
                                 SelectedUI:Destroy()
                             end
+
                             local Old_UI_Value = library.flags["SelectedUI_TB3"]
+
                             repeat task.wait() until library.flags["SelectedUI_TB3"] ~= Old_UI_Value
+
                             if SelectedUI then
                                 SelectedUI:Destroy()
                             end
+
                             if _UI_EnabledToggle then
                                 _UI_EnabledToggle.set(false)
                             end
+
                             return
                         end
+
                         local SelectedUI = LocalPlayer.PlayerGui:FindFirstChild(tostring(library.flags["SelectedUI_TB3"]))
+
                         if SelectedUI then
                             SelectedUI.Enabled = state
+
                             local Old_UI_Value = library.flags["SelectedUI_TB3"]
+
                             repeat task.wait() until library.flags["SelectedUI_TB3"] ~= Old_UI_Value
+
                             SelectedUI.Enabled = false
                             if _UI_EnabledToggle then
                                 _UI_EnabledToggle.set(false)
@@ -14211,58 +14290,81 @@ if Game_Name == "The Bronx" then
                 end})
             end
 
-            do
+            do -- \\ Players Tab
                 local Column = PlayersTab:column({})
-                local PlayerListSection = Column:section({name = "Select Player", size = 1, default = false, side = 'left'})
+
+                local PlayerListSection = Column:section({name = "Select Player", size = 1, default = false, side = 'left' --[[3 people icon]]})
+
                 local PlayerList = PlayerListSection:list({flag = "SelectPlayer_TheBronx", options = {}, callback = function(state)
                     Config.TheBronx.PlayerUtilities.SelectedPlayer = tostring(state)
                 end})
+
                 local RefreshPlayers = LPH_NO_VIRTUALIZE(function()
                     local Cache = {}
+
                     for i, Player in Players:GetPlayers() do
                         if Player == LocalPlayer then continue end
+
                         table.insert(Cache, Player.Name)
                     end
+
                     table.sort(Cache)
+
                     PlayerList.refresh_options(Cache)
                 end)
+
                 task.spawn(RefreshPlayers)
+
                 Players.PlayerAdded:Connect(RefreshPlayers)
+
                 Players.PlayerRemoving:Connect(RefreshPlayers)
+
                 Column = PlayersTab:column({})
+
                 local PlayerOptionsSection = Column:section({name = "Player Options", size = 1, default = false, side = 'right', icon = GetImage("Wrench.png")})
+                
                 PlayerOptionsSection:toggle({type = "toggle", name = "Spectate Player", flag = "SpectatePlayer_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.PlayerUtilities.SpectatePlayer = state
                 end})
+
                 PlayerOptionsSection:toggle({type = "toggle", name = "Bring Player", flag = "BringPlayer_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.PlayerUtilities.BringingPlayer = state
                 end})
+
                 PlayerOptionsSection:toggle({type = "toggle", name = "Bug / Kill Player - Car", flag = "BugPlayer_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.PlayerUtilities.BugPlayer = state
                 end})
+
                 PlayerOptionsSection:toggle({type = "toggle", name = "Auto Kill Player - Gun", flag = "AutoKillPlayer_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.PlayerUtilities.AutoKill = state
                 end})
+
                 PlayerOptionsSection:toggle({type = "toggle", name = "Auto Ragdoll Player - Gun", flag = "AutoRagdollPlayer_TheBronx", seperator = true, default = false, callback = function(state)
                     Config.TheBronx.PlayerUtilities.AutoRagdoll = state
                 end})
+
                 PlayerOptionsSection:button({name = "Teleport To Player", callback = function()
                     task.spawn(Teleport, Players[Config.TheBronx.PlayerUtilities.SelectedPlayer].Character.HumanoidRootPart.CFrame)
                 end})
+
                 PlayerOptionsSection:button({name = "Down Player - Hold Gun", callback = function(state)
                     pcall(kill_gun, Config.TheBronx.PlayerUtilities.SelectedPlayer, "HumanoidRootPart", (Players[Config.TheBronx.PlayerUtilities.SelectedPlayer].Character.Humanoid.Health - 5))
                 end})
+
                 PlayerOptionsSection:button({name = "Kill Player - Hold Gun", callback = function(state)
                     pcall(kill_gun, Config.TheBronx.PlayerUtilities.SelectedPlayer, "HumanoidRootPart", math.huge)
                 end})
+
                 PlayerOptionsSection:button({name = "God Player - Hold Gun", callback = function(state)
                     pcall(kill_gun, Config.TheBronx.PlayerUtilities.SelectedPlayer, "HumanoidRootPart", math.sqrt(-1))
                 end})
+
                 PlayerOptionsSection:button({name = "Fling Player - Hold Gun", callback = function(state)
                     for Index=1, 50 do
                         pcall(kill_gun, Config.TheBronx.PlayerUtilities.SelectedPlayer, "RightUpperLeg", 0.01)
                     end
                 end})
+
                 PlayerOptionsSection:button({name = "God All Players - Hold Gun", callback = function()
                     task.spawn(LPH_NO_VIRTUALIZE(function()
                         for Index, Value in Players:GetPlayers() do
@@ -14273,6 +14375,7 @@ if Game_Name == "The Bronx" then
                         end
                     end))
                 end})
+                
                 PlayerOptionsSection:button({name = "Kill All Players - Hold Gun", callback = function()
                     task.spawn(LPH_NO_VIRTUALIZE(function()
                         for Index, Value in Players:GetPlayers() do
@@ -14285,31 +14388,41 @@ if Game_Name == "The Bronx" then
                 end})
             end
                 
-            do
+            do -- \\ Misc Tab
                 local Column = MiscTab:column({})
+
                 local FarmingSection = Column:section({name = "Farming", size = 0.415, default = false, side = 'left', icon = GetImage("Wheatt.png")})
+
                 FarmingSection:toggle({type = "toggle", name = "Auto Farm Construction", flag = "FarmConstruction_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.Farms.FarmConstructionJob = state
                 end})
+
                 FarmingSection:toggle({type = "toggle", name = "Auto Farm Bank Robbery", flag = "FarmBank_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.Farms.FarmBank = state
                 end})
+
                 FarmingSection:toggle({type = "toggle", name = "Auto Farm House Robbery", flag = "FarmHouses_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.Farms.FarmHouses = state
                 end})
+
                 FarmingSection:toggle({type = "toggle", name = "Auto Farm Studio Robbery", flag = "FarmStudio_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.Farms.FarmStudio = state
                 end})
+
                 FarmingSection:toggle({type = "toggle", name = "Auto Farm Dumpsters", flag = "FarmDumpsters_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.Farms.FarmTrash = state
                 end})
+
                 local ManualFarmSections = Column:section({name = "Manual Farms", size = 0.325, default = false, side = 'left', icon = GetImage("Pickkaxe.png")}) 
+
                 ManualFarmSections:toggle({type = "toggle", name = "Auto Collect Dropped Cash", flag = "FarmDroppedMoney_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.Farms.CollectDroppedMoney = state
                 end})
+
                 ManualFarmSections:toggle({type = "toggle", name = "Auto Collect Dropped Bags", flag = "FarmDroppedLoot_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.Farms.CollectDroppedLoot = state
                 end})
+
                 ManualFarmSections:button({name = "Clean All Filthy Money", callback = LPH_NO_VIRTUALIZE(function()
                     if LocalPlayer.stored.FilthyStack.Value == 0 then 
                         return library.notifications:create_notification({
@@ -14318,9 +14431,12 @@ if Game_Name == "The Bronx" then
                             lifetime = 7.5
                         })
                     end
+        
                     if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
                     if not LocalPlayer.Character:FindFirstChild("Humanoid") or LocalPlayer.Character:FindFirstChild("Humanoid").Health == 0 then return end
+        
                     local Cleaner = GetGoodCleaner()
+                    
                     if not Cleaner then
                         return library.notifications:create_notification({
                             name = "Box.lol",
@@ -14328,35 +14444,129 @@ if Game_Name == "The Bronx" then
                             lifetime = 7.5
                         })
                     end
+        
                     Teleport(Cleaner.WorldPivot)
+        
                     task.wait(0.4)
+        
                     fireproximityprompt(Cleaner:FindFirstChild("CashPrompt", true))
+        
                     repeat task.wait() until Cleaner:FindFirstChild("On", true).Color == Color3.fromRGB(74, 156, 69)
+        
                     task.wait(0.5)
+        
                     fireproximityprompt(Cleaner:FindFirstChild("CashPrompt", true))
+                    
                     task.wait(0.25)
+        
                     Teleport(Cleaner.WorldPivot)
+        
                     task.wait(0.4)
+        
                     repeat task.wait() until LocalPlayer.Backpack:FindFirstChild("MoneyReady")
+        
                     LocalPlayer.Character.Humanoid:EquipTool(LocalPlayer.Backpack["MoneyReady"])
+        
                     repeat task.wait(0.1) fireproximityprompt(Cleaner:FindFirstChild("GrabPrompt", true)) until not LocalPlayer.Character:FindFirstChild("MoneyReady")
+                    
                     repeat task.wait()
                     until LocalPlayer.Backpack:FindFirstChild("BagOfMoney")
+        
                     Teleport(CFrame.new(-203, 284, -1201))
+        
                     task.wait(0.4)
+        
                     LocalPlayer.Character.Humanoid:EquipTool(LocalPlayer.Backpack["BagOfMoney"])
+        
                     task.wait(1)
+        
                     fireproximityprompt(Workspace.ATMMoney.Prompt)
                 end)})
+
                 local FarmSettingsSection = Column:section({name = "Farming Settings", size = 0.225, default = false, side = 'left', Icon = GetImage("Settings.png")}) 
+
                 FarmSettingsSection:toggle({type = "toggle", name = "AFK Safety Teleport", flag = "AFKCheck_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.Farms.AFKCheck = state
                 end})
+
                 FarmSettingsSection:toggle({type = "toggle", name = "Auto Sell Trash", flag = "SellTrash_TheBronx", default = false, callback = function(state)
                     Config.TheBronx.Farms.AutoSellTrash = state
                 end})
+
                 Column = MiscTab:column({})
+
                 local DupingSection = Column:section({name = "Duping Section", size = 0.29, default = false, side = 'right', icon = GetImage("Node.png")}) 
+
+                local Cooldown = false;
+
+                DupingSection:button({name = "Duplicate Current Item", callback = function()
+                    task.spawn(function()
+                        if Cooldown then
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Please wait!`,
+                                lifetime = 5
+                            })
+                            return
+                        end
+                        Cooldown = true
+                        local Player = Players.LocalPlayer
+                        local Backpack = Player.Backpack
+
+                        local Tool = Player.Character:FindFirstChildOfClass("Tool")
+
+                        if not Tool then
+                            library.notifications:create_notification({
+                                name = "Box.lol",
+                                info = `Could not find a tool! you must hold one.`,
+                                lifetime = 10
+                            })
+                            return
+                        end
+
+                        Player.Character.Humanoid:UnequipTools()
+
+                        local ToolName = Tool.Name
+                        local ToolId
+
+                        local Connection = ReplicatedStorage.MarketItems.ChildAdded:Connect(
+                            function(item)
+
+                                if item.Name == ToolName then
+                                    if item:WaitForChild('owner').Value == Player.Name then
+                                        ToolId = item:GetAttribute('SpecialId')
+                                    end
+                                end
+                            end
+                        )
+
+                        spawn(function()
+                            ReplicatedStorage.ListWeaponRemote:FireServer(ToolName, 99999)
+                        end)
+
+                        task.wait(.26)
+
+                        spawn(function()
+                            ReplicatedStorage.BackpackRemote:InvokeServer('Store', ToolName)
+                        end)
+
+                        task.wait(3)
+
+                        spawn(function()
+                            ReplicatedStorage.BuyItemRemote:FireServer(ToolName, 'Remove', ToolId)
+                        end)
+
+                        spawn(function()
+                            ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
+                        end)
+
+                        Connection:Disconnect()
+
+                        task.wait(1)
+
+                        Cooldown = false
+                    end)
+                end})
                 local Cooldown = false;
                 DupingSection:button({name = "Duplicate Current Item", callback = function()
                     task.spawn(function()
@@ -14519,9 +14729,12 @@ if Game_Name == "The Bronx" then
                     end
                 })
                 DupingSection:label({wrapped = true, name = "This might bug if you have more than 1 of the item you're duping!"})
+
                 local VulnerabilitySection = Column:section({name = "Vulnerability Section", size = 0.347, default = false, side = 'right', icon = GetImage("unlocked.png")}) 
+
                 local GetFruitCup = LPH_NO_VIRTUALIZE(function()
                     local Found, Cup = false, nil;
+
                     for Index, Value in next, {LocalPlayer.Backpack:GetChildren(), LocalPlayer.Character:GetChildren()} do
                         for _Index, _Value in Value do
                             if _Value:IsA("Tool") and _Value.Name == "Ice-Fruit Cupz" then
@@ -14533,52 +14746,72 @@ if Game_Name == "The Bronx" then
                             end
                         end
                     end 
+
                     return Found, Cup
                 end)
+
                 VulnerabilitySection:button({name = "Generate Max Illegal Money", callback = function()
                     local Found, Cup = GetFruitCup()
+
                     if Cup and Found then
                         HideUI("generating illegal cash 💷\n please wait.")
+
                         local OLDCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+
                         if Cup.Parent == LocalPlayer.Backpack then
                             LocalPlayer.Character.Humanoid:EquipTool(Cup)
                             task.wait(1)
                         end 
+
                         Teleport(Workspace["IceFruit Sell"].CFrame, true)
+
                         task.wait(.5)
+
                         for Index=1, 4000 do
                             task.spawn(function()
                                 _fireproximityprompt(Workspace["IceFruit Sell"].ProximityPrompt)
                             end)
                         end
+
                         Teleport(OLDCFrame)
+
                         DeleteSecretUI()
+
                         return
                     end
+
                     HideUI("buying products 🍉\nif you are stuck here, PLEASE WAIT!!")
+
                     local OLDCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+
                     local Itemz = {"FijiWater", "FreshWater", "Ice-Fruit Bag", "Ice-Fruit Cupz"}
                     local Stove;
+
                     for Index, Value in Workspace.CookingPots:GetChildren() do
                         if Value:IsA("Model") then
                             if Value:FindFirstChildWhichIsA("ProximityPrompt", true).ActionText == "Turn On" and Value:FindFirstChildWhichIsA("ProximityPrompt", true).Enabled then
                                 Stove = Value
+
                                 break
                             end
                         end
                     end
+
                     for Index, Value in Itemz do
                         if not LocalPlayer.Backpack:FindFirstChild(Value) then
                             ReplicatedStorage:WaitForChild("ExoticShopRemote"):InvokeServer(Value)
                             task.wait(1)
                         end
                     end
+
                     local Check = false;
+
                     for Index, Value in Itemz do
                         if not LocalPlayer.Backpack:FindFirstChild(Value) then
                             Check = true
                         end
                     end
+
                     if Check then
                         DeleteSecretUI()
                         library.notifications:create_notification({
@@ -14588,72 +14821,108 @@ if Game_Name == "The Bronx" then
                         })
                         return
                     end
+
                     DeleteSecretUI()
+
                     HideUI("generating illegal cash 💷\n this takes around 1-2 minutes.\n please wait.")
+
                     Teleport(Stove.CookPart.CFrame, true)
+
                     task.wait(1)
+
                     StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
                     LocalPlayer.Character.HumanoidRootPart.Anchored = true
+
                     task.wait(1.5)
+
                     fireproximityprompt(Stove:FindFirstChildWhichIsA("ProximityPrompt", true))
+
                     task.wait(2)
+
                     for Index, Value in {"FijiWater", "FreshWater", "Ice-Fruit Bag"} do
                         LocalPlayer.Character.Humanoid:EquipTool(LocalPlayer.Backpack[Value])
                         task.wait(1)
                         fireproximityprompt(Stove:FindFirstChildWhichIsA("ProximityPrompt", true))
                         task.wait(3)
                     end
+
                     repeat wait() until 
                     Stove.CookPart.Steam.LoadUI.Enabled == false
+
                     if not LocalPlayer.Character:FindFirstChild("Ice-Fruit Cupz") then
                         LocalPlayer.Character.Humanoid:EquipTool(LocalPlayer.Backpack['Ice-Fruit Cupz'])
                         task.wait(1)
                     end
+                    
                     task.wait(1)
+
                     fireproximityprompt(Stove:FindFirstChildWhichIsA("ProximityPrompt", true))
+
                     task.wait(3)
+
                     LocalPlayer.Character.HumanoidRootPart.Anchored = false
+
                     Teleport(Workspace["IceFruit Sell"].CFrame, true)
+
                     task.wait(1)
+
                     LocalPlayer.Character.HumanoidRootPart.Anchored = true
+
                     task.wait(1.5)
+
                     if not LocalPlayer.Character:FindFirstChild("Ice-Fruit Cupz") then
                         LocalPlayer.Character.Humanoid:EquipTool(LocalPlayer.Backpack['Ice-Fruit Cupz'])
                         task.wait(1)
                     end
+
                     Workspace["IceFruit Sell"].ProximityPrompt.HoldDuration = 0
+
                     for Index=1, 4000 do
                         task.spawn(function()
                             _fireproximityprompt(Workspace["IceFruit Sell"].ProximityPrompt)
                         end)
                     end
+
                     LocalPlayer.Character.HumanoidRootPart.Anchored = false
                     StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+
                     task.wait(0.5)
+
                     Teleport(OLDCFrame, true)
+
                     task.wait(2)
+
                     pcall(DeleteSecretUI)
                 end})
+
                 VulnerabilitySection:label({wrapped = true, name = "Money Generator takes around 3 minutes, and can take longer if some items are not in stock. You will need around 5K to do this."})
+
                 local KillAuraSection = Column:section({name = "Kill Aura Section", size = 0.275, default = false, side = 'right', icon = GetImage("Bullet.png")}) 
+
                 KillAuraSection:toggle({name = "Enabled - Hold Gun", flag = "KillAura_Enabled_TB3", type = "toggle", default = false, callback = function(state)
                     Config.TheBronx.KillAura = state
                 end})
+
                 KillAuraSection:slider({name = "Kill Aura Range", flag = "KillAuraRange_TB3", min = 0, max = 1000, default = 300, suffix = "st", callback = function(state)
                     Config.TheBronx.KillAuraRange = state
                 end})
             end
 
-            do
+            do -- \\ Purchase Guns
                 local PurchaseGunColumn = PurchaseGunTab:column({})
+
                 local WeaponListSection = PurchaseGunColumn:section({name = "Purchase Selected Item", side = "left", size = 1, icon = GetImage("Cash.png")})
+
                 WeaponListSection:list({flag = "PurchaseSelectedItem_TheBronx", options = Config.Guns, callback = function(state)
                     task.spawn(LPH_NO_VIRTUALIZE(function()
                         if not state then
                             return
                         end
+
                         Config.TheBronx.Selected_Item = state
+
                         local self = string.match(Config.TheBronx.Selected_Item, "^(.*) %-");
+
                         self = self:match("^%s*(.-)%s*$");
                         local OldCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame;
                         local Prompt = Workspace:FindFirstChild("GUNS")[self]:FindFirstChildWhichIsA("ProximityPrompt",true);
@@ -14664,6 +14933,9 @@ if Game_Name == "The Bronx" then
                                 lifetime = 5
                             })
                         end
+                        
+                        --if Solara then Prompt.HoldDuration = 0; end
+
                         local Part = Prompt.Parent:IsA("Part") and Prompt.Parent.CFrame or Prompt.Parent:IsA("MeshPart") and Prompt.Parent.CFrame or Prompt.Parent:IsA("UnionOperation") and Prompt.Parent.CFrame;
                         if LocalPlayer.stored.Money.Value < Workspace:FindFirstChild("GUNS")[self]:FindFirstChild("Price",true).Value then
                             return library.notifications:create_notification({
@@ -14672,8 +14944,11 @@ if Game_Name == "The Bronx" then
                                 lifetime = 5
                             })
                         end;
+                        
                         task.spawn(Teleport, Part)
+
                         task.wait(0.4)
+
                         local ItemReceieved = false;
                         task.spawn(function()
                             local Check = LocalPlayer.Backpack.ChildAdded:Connect(function(Child)
@@ -14681,16 +14956,22 @@ if Game_Name == "The Bronx" then
                                     ItemReceieved = true
                                 end
                             end)
+
                             task.spawn(function()
                                 task.wait(1.5)
                                 ItemReceieved = true
                             end)
+
                             repeat task.wait() until ItemReceieved == true
                             Check:Disconnect()
                         end)
+
                         repeat task.wait(); fireproximityprompt(Prompt); until ItemReceieved == true;
+                        
                         task.wait(0.4)
+
                         task.spawn(Teleport, OldCFrame)
+
                         library.notifications:create_notification({
                             name = "Box.lol",
                             info = `Successfully purchased {self}!`,
@@ -14698,19 +14979,27 @@ if Game_Name == "The Bronx" then
                         })
                     end))
                 end})
+
                 PurchaseGunColumn = PurchaseGunTab:column({})
+
                 local TeleportListSection = PurchaseGunColumn:section({name = "Teleport To Location", side = "right", size = 1, icon = GetImage("World.png")})
+
                 local List = {}
+
                 for Index, Value in Config.TheBronx.TeleportationList do
                     table.insert(List, Index)
                 end
+
                 table.sort(List)
+
                 TeleportListSection:list({flag = "TeleportToPlace_TheBronx", options = List, callback = function(state)
                     task.spawn(LPH_NO_VIRTUALIZE(function()
                         if not state then
                             return
                         end
+
                         Teleport(Config.TheBronx.TeleportationList[state])
+
                         library.notifications:create_notification({
                             name = "Box.lol",
                             info = `Successfully teleported to {state}!`,
@@ -14723,67 +15012,80 @@ if Game_Name == "The Bronx" then
     end
 end
 
-if Game_Name == "The Bronx" and not Solara then
-    local WeaponModTab, MiscModTab = window:tab({name = "Modifications", tabs = {"Weapon Modifications", "Hitbox Modifications"}, icon = GetImage("Wrench.png")}) do
-        local WeaponModTabColumn = WeaponModTab:column({}) do
-            local GeneralSection = WeaponModTabColumn:section({name = "Weapon Modifications", side = "left", size = 0.5, icon = GetImage("Pistol.png")})
-            local Modifications = {
-                "Infinite Ammo";
-                "Infinite Clips";
-                "Infinite Damage";
-                "Fully Automatic";
-                "Disable Jamming";
-                "Modify Recoil Value";
-                "Modify Spread Value";
-                "Modify Reload Speed";
-                "Modify Equip Speed";
-                "Modify Fire Rate";
-            }
-            for _, Index in Modifications do
-                GeneralSection:toggle({name = Index, flag = Index.."_TB3", type = "toggle", default = false, callback = function(state)
-                    if Index == "Fully Automatic" then Index = "Automatic" end
-                    Config.TheBronx.Modifications[Index:gsub(" ", "")] = state
+    if Game_Name == "The Bronx" and not Solara then
+        local WeaponModTab, MiscModTab = window:tab({name = "Modifications", tabs = {"Weapon Modifications", "Hitbox Modifications"}, icon = GetImage("Wrench.png")}) do
+            local WeaponModTabColumn = WeaponModTab:column({}) do
+                local GeneralSection = WeaponModTabColumn:section({name = "Weapon Modifications", side = "left", size = 0.5, icon = GetImage("Pistol.png")})
+
+                local Modifications = {
+                    "Infinite Ammo";
+                    "Infinite Clips";
+                    "Infinite Damage";
+                    "Fully Automatic";
+                    "Disable Jamming";
+                    "Modify Recoil Value";
+                    "Modify Spread Value";
+                    "Modify Reload Speed";
+                    "Modify Equip Speed";
+                    "Modify Fire Rate";
+                }
+
+                for _, Index in Modifications do
+                    GeneralSection:toggle({name = Index, flag = Index.."_TB3", type = "toggle", default = false, callback = function(state)
+                        if Index == "Fully Automatic" then Index = "Automatic" end
+                        Config.TheBronx.Modifications[Index:gsub(" ", "")] = state
+                    end})
+                end
+
+                GeneralSection = WeaponModTabColumn:section({name = "Weapon Modifications", side = "left", size = 0.5, icon = GetImage("Settings.png")})
+
+                GeneralSection:slider({name = "Recoil Percentage", flag = "RecoilValue_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.TheBronx.Modifications.RecoilPercentage = state
+                end})
+
+                GeneralSection:slider({name = "Spread Percentage", flag = "SpreadValue_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.TheBronx.Modifications.SpreadPercentage = state
+                end})
+
+                GeneralSection:slider({name = "Fire Rate Percentage", flag = "FireRateSpeed_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.TheBronx.Modifications.FireRateSpeed = state
+                end})
+
+                GeneralSection:slider({name = "Reload Speed Percentage", flag = "ReloadSpeed_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.TheBronx.Modifications.ReloadSpeed = state
+                end})
+
+                GeneralSection:slider({name = "Equip Speed Percentage", flag = "EquipSpeed_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
+                    Config.TheBronx.Modifications.EquipSpeed = state
                 end})
             end
-            GeneralSection = WeaponModTabColumn:section({name = "Weapon Modifications", side = "left", size = 0.5, icon = GetImage("Settings.png")})
-            GeneralSection:slider({name = "Recoil Percentage", flag = "RecoilValue_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
-                Config.TheBronx.Modifications.RecoilPercentage = state
-            end})
-            GeneralSection:slider({name = "Spread Percentage", flag = "SpreadValue_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
-                Config.TheBronx.Modifications.SpreadPercentage = state
-            end})
-            GeneralSection:slider({name = "Fire Rate Percentage", flag = "FireRateSpeed_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
-                Config.TheBronx.Modifications.FireRateSpeed = state
-            end})
-            GeneralSection:slider({name = "Reload Speed Percentage", flag = "ReloadSpeed_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
-                Config.TheBronx.Modifications.ReloadSpeed = state
-            end})
-            GeneralSection:slider({name = "Equip Speed Percentage", flag = "EquipSpeed_TB3", default = 50, min = 0, max = 100, suffix = "%", callback = function(state)
-                Config.TheBronx.Modifications.EquipSpeed = state
-            end})
-        end
-        local MiscTabColumn = MiscModTab:column({}) do
-            local GeneralSection = MiscTabColumn:section({name = "Hitbox Modifications", side = "left", size = 0.4})
-            GeneralSection:toggle({name = 'Enabled', flag = 'HitboxesEnabled', type = 'toggle', default = false, callback = function(state)
-                Config.MiscSettings.Hitbox_Expander.Enabled = state
-            end}):colorpicker({flag = 'HitboxesColor', color = Color3.new(1,1,1), alpha = 1, callback = function(state, alpha)
-                Config.MiscSettings.Hitbox_Expander.Color = state
-                Config.MiscSettings.Hitbox_Expander.Transparency = alpha
-            end})
-            GeneralSection:slider({name = "Hitbox Multiplier", flag = "HitBox_Multiplier", min = 1, max = 20, default = 10, callback = function(state)
-                Config.MiscSettings.Hitbox_Expander.Multiplier = state
-            end})
-            GeneralSection:dropdown({name = "Hitbox Part", flag = "HitBoxPart", items = {"Head", "Torso"}, default = "Torso", multi = false, callback = function(value)
-                Config.MiscSettings.Hitbox_Expander.Part = (value == "Head") and "Head" or "HumanoidRootPart"
-            end})
-            GeneralSection:dropdown({name = "Hitbox Material", flag = "HitBoxMaterial", items = {
-                "SmoothPlastic", "Wood", "Slate", "Concrete", "CorrodedMetal",
-                "Neon", "Grass", "Fabric", "DiamondPlate", "Sandstone",
-                "Ice", "Marble", "Granite", "Pebble", "Metal",
-                "Glass", "Plastic", "ForceField"
-            }, default = "ForceField", multi = false, callback = function(value)
-                Config.MiscSettings.Hitbox_Expander.Material = value
-            end})
+
+            local MiscTabColumn = MiscModTab:column({}) do
+                local GeneralSection = MiscTabColumn:section({name = "Hitbox Modifications", side = "left", size = 0.4})
+
+                GeneralSection:toggle({name = 'Enabled', flag = 'HitboxesEnabled', type = 'toggle', default = false, callback = function(state)
+                    Config.MiscSettings.Hitbox_Expander.Enabled = state
+                end}):colorpicker({flag = 'HitboxesColor', color = Color3.new(1,1,1), alpha = 1, callback = function(state, alpha)
+                    Config.MiscSettings.Hitbox_Expander.Color = state
+                    Config.MiscSettings.Hitbox_Expander.Transparency = alpha
+                end})
+
+                GeneralSection:slider({name = "Hitbox Multiplier", flag = "HitBox_Multiplier", min = 1, max = 20, default = 10, callback = function(state)
+                    Config.MiscSettings.Hitbox_Expander.Multiplier = state
+                end})
+
+                GeneralSection:dropdown({name = "Hitbox Part", flag = "HitBoxPart", items = {"Head", "Torso"}, default = "Torso", multi = false, callback = function(value)
+                    Config.MiscSettings.Hitbox_Expander.Part = (value == "Head") and "Head" or "HumanoidRootPart"
+                end})
+
+                GeneralSection:dropdown({name = "Hitbox Material", flag = "HitBoxMaterial", items = {
+                    "SmoothPlastic", "Wood", "Slate", "Concrete", "CorrodedMetal",
+                    "Neon", "Grass", "Fabric", "DiamondPlate", "Sandstone",
+                    "Ice", "Marble", "Granite", "Pebble", "Metal",
+                    "Glass", "Plastic", "ForceField"
+                }, default = "ForceField", multi = false, callback = function(value)
+                    Config.MiscSettings.Hitbox_Expander.Material = value
+                end})
+            end
         end
     end
-end
