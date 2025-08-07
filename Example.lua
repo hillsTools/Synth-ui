@@ -14499,74 +14499,117 @@ if Game_Name == "The Bronx" then
 
                 local Cooldown = false;
 
-                DupingSection:button({name = "Duplicate Current Item", callback = function()
-                    task.spawn(function()
-                        if Cooldown then
-                            library.notifications:create_notification({
-                                name = "Box.lol",
-                                info = `Please wait!`,
-                                lifetime = 5
-                            })
-                            return
-                        end
-                        Cooldown = true
-                        local Player = Players.LocalPlayer
-                        local Backpack = Player.Backpack
+                local player = game:GetService("Players").LocalPlayer
+local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
 
-                        local Tool = Player.Character:FindFirstChildOfClass("Tool")
+local blacklistedTools = {"Fist", "Phone"}
 
-                        if not Tool then
-                            library.notifications:create_notification({
-                                name = "Box.lol",
-                                info = `Could not find a tool! you must hold one.`,
-                                lifetime = 10
-                            })
-                            return
-                        end
+local function isToolBlacklisted(toolName)
+    for _, blacklisted in ipairs(blacklistedTools) do
+        if toolName == blacklisted then return true end
+    end
+    return false
+end
 
-                        Player.Character.Humanoid:UnequipTools()
+local function getPing()
+    if typeof(player.GetNetworkPing) == "function" then
+        local success, result = pcall(function()
+            return tonumber(string.match(player:GetNetworkPing(), "%d+"))
+        end)
+        if success and result then return result end
+    end
 
-                        local ToolName = Tool.Name
-                        local ToolId
+    local success2, pingStat = pcall(function()
+        return player:FindFirstChild("PlayerGui"):FindFirstChild("Ping") or
+               player:FindFirstChild("PlayerScripts"):FindFirstChild("Ping")
+    end)
+    if success2 and pingStat and pingStat:IsA("TextLabel") then
+        local num = tonumber(string.match(pingStat.Text, "%d+"))
+        if num then return num end
+    end
 
-                        local Connection = ReplicatedStorage.MarketItems.ChildAdded:Connect(
-                            function(item)
+    local t0 = tick()
+    local temp = Instance.new("BoolValue", ReplicatedStorage)
+    temp.Name = "PingTest_"..tostring(math.random(10000,99999))
+    task.wait(0.1)
+    local t1 = tick()
+    temp:Destroy()
+    return math.clamp((t1-t0)*1000,50,300)
+end
 
-                                if item.Name == ToolName then
-                                    if item:WaitForChild('owner').Value == Player.Name then
-                                        ToolId = item:GetAttribute('SpecialId')
-                                    end
-                                end
-                            end
-                        )
+DupingSection:button({name = "Duplicate Current Item", callback = function()
+    task.spawn(function()
+        if Cooldown then
+            library.notifications:create_notification({
+                name = "Box.lol",
+                info = `Please wait!`,
+                lifetime = 5
+            })
+            return
+        end
+        Cooldown = true
+        
+        local Tool = player.Character:FindFirstChildOfClass("Tool")
+        if not Tool then
+            library.notifications:create_notification({
+                name = "Box.lol",
+                info = `Could not find a tool! You must hold one.`,
+                lifetime = 10
+            })
+            Cooldown = false
+            return
+        end
+        
+        if isToolBlacklisted(Tool.Name) then
+            library.notifications:create_notification({
+                name = "Box.lol",
+                info = `This tool is blacklisted and cannot be duplicated!`,
+                lifetime = 10
+            })
+            Cooldown = false
+            return
+        end
 
-                        spawn(function()
-                            ReplicatedStorage.ListWeaponRemote:FireServer(ToolName, 99999)
-                        end)
+        player.Character.Humanoid:UnequipTools()
+        Tool.Parent = player.Backpack
+        task.wait(0.1)
 
-                        task.wait(.26)
+        local ToolName = Tool.Name
+        local ToolId
 
-                        spawn(function()
-                            ReplicatedStorage.BackpackRemote:InvokeServer('Store', ToolName)
-                        end)
+        local Connection = ReplicatedStorage.MarketItems.ChildAdded:Connect(function(item)
+            if item.Name == ToolName then
+                local owner = item:WaitForChild('owner', 2)
+                if owner and owner.Value == player.Name then
+                    ToolId = item:GetAttribute('SpecialId')
+                end
+            end
+        end)
 
-                        task.wait(3)
+        local ping = getPing()
+        local delay = 0.25 + ((math.clamp(ping,0,300)/300)*0.03)
 
-                        spawn(function()
-                            ReplicatedStorage.BuyItemRemote:FireServer(ToolName, 'Remove', ToolId)
-                        end)
+        ReplicatedStorage.ListWeaponRemote:FireServer(ToolName, 99999)
+        task.wait(delay)
 
-                        spawn(function()
-                            ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
-                        end)
+        ReplicatedStorage.BackpackRemote:InvokeServer('Store', ToolName)
+        task.wait(3)
 
-                        Connection:Disconnect()
+        if ToolId then
+            ReplicatedStorage.BuyItemRemote:FireServer(ToolName, 'Remove', ToolId)
+            task.wait(0.5)
+        end
 
-                        task.wait(1)
+        ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
+        task.wait(0.2)
+        ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
 
-                        Cooldown = false
-                    end)
-                end})
+        Connection:Disconnect()
+
+        task.wait(1)
+        Cooldown = false
+    end)
+end})
 
                 DupingSection:label({wrapped = true, name = "This might bug if you have more than 1 of the item you're duping!"})
 
