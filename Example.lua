@@ -2954,7 +2954,7 @@ do
                 frame.Parent = getgenv().HideScreenGUI
             
                 local textLabel = Instance.new("TextLabel")
-                textLabel.Name = "\nhideuibronxlol"
+                textLabel.Name = "\nhideuiboxlol"
                 textLabel.Size = UDim2.new(0, 400, 0, 100)
                 textLabel.Font = Enum.Font.SourceSansBold
                 textLabel.RichText = true
@@ -5249,7 +5249,7 @@ do
                 frame.Parent = getgenv().HideScreenGUI
             
                 local textLabel = Instance.new("TextLabel")
-                textLabel.Name = "\nhideuibronxlol"
+                textLabel.Name = "\nhideuiboxlol"
                 textLabel.Size = UDim2.new(0, 400, 0, 100)
                 textLabel.Font = Enum.Font.SourceSansBold
                 textLabel.RichText = true
@@ -5273,7 +5273,7 @@ do
                             local timeLeft = endTime - tick()
 
                             textLabel.Text = string.format(
-                                '<font color="rgb(0,163,224)">bronx.</font>lol\n%s\nplease wait : <font color="rgb(0,163,224)">%.2f</font> seconds',
+                                '<font color="rgb(0,163,224)">box.</font>lol\n%s\nplease wait : <font color="rgb(0,163,224)">%.2f</font> seconds',
                                 Title, math.max(timeLeft, 0)
                             )
 
