@@ -1552,20 +1552,21 @@ do
                 end
 
                 if Config.Thebox.PlayerUtilities.SpectatePlayer then
-    Set_Spectate = false
-    local Subject = Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer) and Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character and Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character:FindFirstChild("Humanoid")
+                    Set_Spectate = false
+                    local Subject = Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer) and Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character and Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character:FindFirstChild("Humanoid")
 
-    if not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer) or not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character or not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character:FindFirstChild("Humanoid") then
-        Subject = LocalPlayer.Character.Humanoid
-    end
+                    if not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer) or not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character or not Players:FindFirstChild(Config.Thebox.PlayerUtilities.SelectedPlayer).Character:FindFirstChild("Humanoid") then
+                        Subject = LocalPlayer.Character.Humanoid
+                    end
 
-    Camera.CameraSubject = Subject
-else
-    if not Set_Spectate then
-        Set_Spectate = true
-        Camera.CameraSubject = LocalPlayer.Character.Humanoid
-    end
-end
+                    Camera.CameraSubject = Subject
+                else
+                    if not Set_Spectate then
+                        Set_Spectate = true
+
+                        Camera.CameraSubject = LocalPlayer.Character.Humanoid
+                    end
+                end
             end))
         else
             RunService:BindToRenderStep("MiscSettings", 1000 , LPH_NO_VIRTUALIZE(function()
@@ -14566,167 +14567,160 @@ if Game_Name == "The Bronx" then
                         Cooldown = false
                     end)
                 end})
-                local Cooldown = false;
-                DupingSection:button({name = "Duplicate Current Item", callback = function()
-                    task.spawn(function()
-                        if Cooldown then
-                            library.notifications:create_notification({
-                                name = "Box.lol",
-                                info = `Please wait!`,
-                                lifetime = 5
-                            })
-                            return
-                        end
-                        Cooldown = true
-                        local Player = Players.LocalPlayer
-                        local Backpack = Player.Backpack
-                        local Tool = Player.Character:FindFirstChildOfClass("Tool")
-                        if not Tool then
-                            library.notifications:create_notification({
-                                name = "Box.lol",
-                                info = `Could not find a tool! you must hold one.`,
-                                lifetime = 10
-                            })
-                            return
-                        end
-                        Player.Character.Humanoid:UnequipTools()
-                        local ToolName = Tool.Name
-                        local ToolId
-                        local Connection = ReplicatedStorage.MarketItems.ChildAdded:Connect(
-                            function(item)
-                                if item.Name == ToolName then
-                                    if item:WaitForChild('owner').Value == Player.Name then
-                                        ToolId = item:GetAttribute('SpecialId')
-                                    end
-                                end
-                            end
-                        )
-                        spawn(function()
-                            ReplicatedStorage.ListWeaponRemote:FireServer(ToolName, 99999)
-                        end)
-                        task.wait(.26)
-                        spawn(function()
-                            ReplicatedStorage.BackpackRemote:InvokeServer('Store', ToolName)
-                        end)
-                        task.wait(3)
-                        spawn(function()
-                            ReplicatedStorage.BuyItemRemote:FireServer(ToolName, 'Remove', ToolId)
-                        end)
-                        spawn(function()
-                            ReplicatedStorage.BackpackRemote:InvokeServer("Grab", ToolName)
-                        end)
-                        Connection:Disconnect()
-                        task.wait(1)
-                        Cooldown = false
-                    end)
-                end})
+
                 local AutoMarketDupe = {
-                    Enabled = false,
-                    LastTools = {},
-                    Cooldown = false,
-                    Running = false
-                }
-                function AutoMarketDupe:GetCurrentTools()
-                    local tools = {}
-                    local player = game:GetService("Players").LocalPlayer
-                    local equipped = player.Character:FindFirstChildOfClass("Tool")
-                    if equipped then
-                        table.insert(tools, equipped.Name)
-                    end
-                    for _, item in ipairs(player.Backpack:GetChildren()) do
-                        if item:IsA("Tool") then
-                            table.insert(tools, item.Name)
-                        end
-                    end
-                    return tools
-                end
-                function AutoMarketDupe:FindNewTools()
-                    local currentTools = self:GetCurrentTools()
-                    local newTools = {}
-                    for _, toolName in ipairs(currentTools) do
-                        if not table.find(self.LastTools, toolName) then
-                            table.insert(newTools, toolName)
-                        end
-                    end
-                    self.LastTools = currentTools
-                    return newTools
-                end
-                function AutoMarketDupe:DuplicateTool(toolName)
-                    if self.Cooldown then return false end
-                    self.Cooldown = true
-                    local Player = game:GetService("Players").LocalPlayer
-                    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-                    Player.Character.Humanoid:UnequipTools()
-                    local ToolId
-                    local Connection = ReplicatedStorage.MarketItems.ChildAdded:Connect(function(item)
-                        if item.Name == toolName and item:WaitForChild('owner').Value == Player.Name then
-                            ToolId = item:GetAttribute('SpecialId')
-                        end
-                    end)
-                    ReplicatedStorage.ListWeaponRemote:FireServer(toolName, 99999)
-                    task.wait(0.26)
-                    ReplicatedStorage.BackpackRemote:InvokeServer('Store', toolName)
-                    task.wait(3)
-                    if ToolId then
-                        ReplicatedStorage.BuyItemRemote:FireServer(toolName, 'Remove', ToolId)
-                    end
-                    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", toolName)
-                    Connection:Disconnect()
-                    task.wait(1)
-                    self.Cooldown = false
-                    return true
-                end
-                function AutoMarketDupe:CheckAndDupe()
-                    if not self.Enabled or self.Running then return end
-                    self.Running = true
-                    local newTools = self:FindNewTools()
-                    if #newTools > 0 then
-                        for _, toolName in ipairs(newTools) do
-                            local success = self:DuplicateTool(toolName)
-                            if success then
-                                game:GetService("StarterGui"):SetCore("SendNotification", {
-                                    Title = "✅ Auto Market Dupe",
-                                    Text = "Duped: "..toolName,
-                                    Duration = 5
-                                })
-                            end
-                            task.wait(2)
-                        end
-                    else
-                        game:GetService("StarterGui"):SetCore("SendNotification", {
-                            Title = "ℹ️ Auto Market Dupe",
-                            Text = "No new tools found",
-                            Duration = 3
-                        })
-                    end
-                    self.Running = false
-                end
-                function AutoMarketDupe:Toggle()
-                    self.Enabled = not self.Enabled
-                    if self.Enabled then
-                        self.LastTools = self:GetCurrentTools()
-                        task.spawn(function()
-                            self:CheckAndDupe()
-                        end)
-                        game:GetService("StarterGui"):SetCore("SendNotification", {
-                            Title = "🔵 Auto Market Dupe",
-                            Text = "Enabled - Scanning for new tools...",
-                            Duration = 3
-                        })
-                    else
-                        game:GetService("StarterGui"):SetCore("SendNotification", {
-                            Title = "⚪ Auto Market Dupe",
-                            Text = "Disabled",
-                            Duration = 3
-                        })
-                    end
-                end
-                DupingSection:button({
-                    name = "Auto Market Dupe", 
-                    callback = function()
-                        AutoMarketDupe:Toggle()
-                    end
+    Enabled = false,
+    LastTools = {},
+    Cooldown = false,
+    Running = false
+}
+
+-- Get all tools in inventory (backpack + equipped)
+function AutoMarketDupe:GetCurrentTools()
+    local tools = {}
+    local player = game:GetService("Players").LocalPlayer
+    
+    -- Check equipped tool
+    local equipped = player.Character:FindFirstChildOfClass("Tool")
+    if equipped then
+        table.insert(tools, equipped.Name)
+    end
+    
+    -- Check backpack tools
+    for _, item in ipairs(player.Backpack:GetChildren()) do
+        if item:IsA("Tool") then
+            table.insert(tools, item.Name)
+        end
+    end
+    
+    return tools
+end
+
+-- Find tools that weren't there before
+function AutoMarketDupe:FindNewTools()
+    local currentTools = self:GetCurrentTools()
+    local newTools = {}
+    
+    -- Compare with last known tools
+    for _, toolName in ipairs(currentTools) do
+        if not table.find(self.LastTools, toolName) then
+            table.insert(newTools, toolName)
+        end
+    end
+    
+    -- Update last known tools
+    self.LastTools = currentTools
+    
+    return newTools
+end
+
+-- Core duping function
+function AutoMarketDupe:DuplicateTool(toolName)
+    if self.Cooldown then return false end
+    self.Cooldown = true
+    
+    local Player = game:GetService("Players").LocalPlayer
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    
+    -- Unequip all tools first
+    Player.Character.Humanoid:UnequipTools()
+    
+    local ToolId
+    local Connection = ReplicatedStorage.MarketItems.ChildAdded:Connect(function(item)
+        if item.Name == toolName and item:WaitForChild('owner').Value == Player.Name then
+            ToolId = item:GetAttribute('SpecialId')
+        end
+    end)
+
+    -- List the tool for sale
+    ReplicatedStorage.ListWeaponRemote:FireServer(toolName, 99999)
+    task.wait(0.26)
+    
+    -- Store the tool
+    ReplicatedStorage.BackpackRemote:InvokeServer('Store', toolName)
+    task.wait(3)
+    
+    -- Buy back the tool
+    if ToolId then
+        ReplicatedStorage.BuyItemRemote:FireServer(toolName, 'Remove', ToolId)
+    end
+    
+    -- Grab the tool back
+    ReplicatedStorage.BackpackRemote:InvokeServer("Grab", toolName)
+    
+    Connection:Disconnect()
+    task.wait(1)
+    self.Cooldown = false
+    
+    return true
+end
+
+-- Main function (runs once when toggled ON)
+function AutoMarketDupe:CheckAndDupe()
+    if not self.Enabled or self.Running then return end
+    self.Running = true
+    
+    -- Update tool cache and find new tools
+    local newTools = self:FindNewTools()
+    
+    if #newTools > 0 then
+        for _, toolName in ipairs(newTools) do
+            local success = self:DuplicateTool(toolName)
+            if success then
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "✅ Auto Market Dupe",
+                    Text = "Duped: "..toolName,
+                    Duration = 5
                 })
+            end
+            task.wait(2) -- Small delay between dupes
+        end
+    else
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "ℹ️ Auto Market Dupe",
+            Text = "No new tools found",
+            Duration = 3
+        })
+    end
+    
+    self.Running = false
+end
+
+-- Toggle function
+function AutoMarketDupe:Toggle()
+    self.Enabled = not self.Enabled
+    
+    if self.Enabled then
+        -- Initialize tool cache
+        self.LastTools = self:GetCurrentTools()
+        
+        -- Start single check
+        task.spawn(function()
+            self:CheckAndDupe()
+        end)
+        
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "🔵 Auto Market Dupe",
+            Text = "Enabled - Scanning for new tools...",
+            Duration = 3
+        })
+    else
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "⚪ Auto Market Dupe",
+            Text = "Disabled",
+            Duration = 3
+        })
+    end
+end
+
+-- Create the toggle button (using your UI library)
+DupingSection:button({
+    name = "Auto Market Dupe", 
+    callback = function()
+        AutoMarketDupe:Toggle()
+    end
+})
+
                 DupingSection:label({wrapped = true, name = "This might bug if you have more than 1 of the item you're duping!"})
 
                 local VulnerabilitySection = Column:section({name = "Vulnerability Section", size = 0.347, default = false, side = 'right', icon = GetImage("unlocked.png")}) 
